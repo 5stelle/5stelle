@@ -10,7 +10,7 @@
 - [x] Create Next.js 14 project with App Router
 - [x] Initialize Git repository
 - [x] Create GitHub repository and push initial commit (repo: tastereview)
-- [ ] Connect to Vercel for automatic deployments (skipped for now)
+- [x] Connected to Netlify for automatic deployments (domain: 5stelle.app)
 
 ### 1.2 Install Dependencies
 - [x] shadcn/ui, Framer Motion, @dnd-kit, qrcode + jspdf, nanoid, Stripe, Supabase, canvas-confetti, lucide-react
@@ -22,10 +22,10 @@
 - [x] Enable email/password authentication
 
 ### 1.4 Configure Stripe
-- [x] Create Stripe account (test mode) + product/price (€39/month, 7-day trial)
-- [x] Set up environment variables
-- [ ] Create Stripe webhook endpoint in Vercel (skipped for now)
-- [ ] Configure webhook in Stripe dashboard (skipped for now)
+- [x] Create Stripe account + product/price (€39/month, 7-day trial)
+- [x] Set up environment variables (live keys configured)
+- [x] Configure webhook in Stripe dashboard (endpoint: `https://5stelle.app/api/webhooks/stripe`)
+- [x] Webhook secret configured
 
 ### 1.5 Project Structure
 - [x] Create folder structure and TypeScript types
@@ -103,12 +103,19 @@
 - [x] Update submission with completed_at on final submit
 - [x] Table identifier decoded from `?t=` URL param and stored in submission
 
-### 5.4 Reward Screen
-- [x] Reward page (`/r/[slug]/[formId]/reward`) with confetti animation
+### 5.4 Review Prompt Screen
+- [x] Review prompt page (`/r/[slug]/[formId]/review`) — intermediate screen before reward
+- [x] Only shows when sentiment === 'great', otherwise redirects to reward
+- [x] Primary platform CTA with animated gold border (Framer Motion)
+- [x] Secondary review platforms as smaller full-width buttons
+- [x] 10-second countdown on "Continua" button; clicking any link also unlocks it
+- [x] `primary_platform` column on restaurants table + star toggle in LinksClient
+
+### 5.5 Reward Screen
+- [x] Reward page (`/r/[slug]/[formId]/reward`) with confetti animation (3 timed bursts)
 - [x] Display reward text from form settings
-- [x] If sentiment === 'great': show review platform buttons (from social_links JSONB)
 - [x] Always show social platform buttons as "Seguici" section
-- [x] Sentiment read from useState initializer (not useEffect) to avoid React Strict Mode double-run bug
+- [x] Review platform buttons removed (moved to review prompt screen)
 
 ---
 
@@ -219,8 +226,8 @@
 ### 10.6 Launch
 - [ ] Set up production environment variables
 - [ ] Configure custom domain
-- [ ] Enable Stripe live mode
-- [ ] Connect Vercel for auto-deploy
+- [x] Enable Stripe live mode
+- [x] Connected Netlify for auto-deploy
 - [ ] Final deployment
 - [ ] Monitor for errors
 

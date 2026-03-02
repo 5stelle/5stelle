@@ -88,7 +88,7 @@ export default async function QuestionPage({ params, searchParams }: Props) {
 
   // Check if index is valid
   if (questionIndex > questions.length) {
-    redirect(`/r/${restaurantSlug}/${formId}/reward`)
+    redirect(`/r/${restaurantSlug}/${formId}/review`)
   }
 
   const currentQuestion = questions[questionIndex - 1]

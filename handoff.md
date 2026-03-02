@@ -1,81 +1,71 @@
-# Session Handoff — 2026-03-02 (Session 5)
+# Session Handoff — 2026-03-02 (Session 6)
 
 ## What Was Done
 
-### Session 4
+### Session 6 (current)
 
-#### 1. Global Cursor Pointer
-**Files:** `src/app/globals.css`, `src/components/ui/dropdown-menu.tsx`
+#### 1. Review Prompt Screen
+**Files:** NEW `src/components/feedback/ReviewPromptClient.tsx`, NEW `src/app/r/[restaurantSlug]/[formId]/review/page.tsx`
 
-- Added global CSS rule in `@layer base` applying `cursor: pointer` to all `button`, `[role="button"]`, `a[href]`, `select`, `summary`, and focusable `[tabindex]` elements (excluding disabled)
-- Fixed dropdown-menu.tsx: changed all 4 instances of `cursor-default` → `cursor-pointer` (DropdownMenuItem, CheckboxItem, RadioItem, SubTrigger)
+- New intermediate screen between last question and reward page
+- Only shows when `feedback_sentiment === 'great'` (reads from sessionStorage); other sentiments redirect straight to reward
+- Primary platform shown as large CTA with animated gold border (rotating reflex + pulsing glow + scale pulse via Framer Motion)
+- Secondary review platforms shown below as slimmer full-width buttons
+- 10-second countdown on "Continua" button; clicking any review link also unlocks it immediately
+- "Continua" button turns black with ArrowRight icon when unlocked
+- Hydration-safe: sentiment read deferred to useEffect to avoid SSR mismatch
+- Server page follows same pattern as reward (force-dynamic, noindex, preview token support)
 
-#### 2. Table Name Badges on Feedback
-**Files:** `src/app/(dashboard)/dashboard/page.tsx`, `src/components/dashboard/FeedbackList.tsx`, `src/components/dashboard/FeedbackDetailDialog.tsx`
+#### 2. Primary Platform (DB + Dashboard)
+**Files:** `src/types/database.types.ts`, `src/components/dashboard/LinksClient.tsx`
 
-- Dashboard page fetches `tables` and builds `tableNames` map (`identifier → name`)
-- `FeedbackList` accepts `tableNames` prop, resolves slug identifiers to human-readable names (e.g. "tavolo-1" → "Tavolo 1")
-- Badge styled as `rounded-full bg-primary/10 text-primary font-medium`, positioned inline next to sentiment label
-- Falls back to raw identifier if table was deleted
-- `FeedbackDetailDialog` also receives `tableNames` and shows the same badge
-- Fixed feedback list card spacing: added `py-0 overflow-hidden` to Card to remove default `py-6` padding
+- Added `primary_platform: string | null` column to restaurants table (requires SQL migration)
+- LinksClient: star icon toggle next to review platform labels (filled yellow = primary, outline = not)
+- Star disabled when platform input is empty
+- `handleSave` includes `primary_platform` with guard to clear if platform's value was removed
+- `removePlatform` clears primaryPlatform if the removed platform was primary
 
-#### 3. Locked Sentiment Question
-**Files:** `src/components/form-builder/QuestionItem.tsx`, `src/components/form-builder/QuestionList.tsx`, `src/components/form-builder/FormBuilderClient.tsx`, `src/components/form-builder/QuestionEditor.tsx`
+**SQL migration needed:**
+```sql
+ALTER TABLE restaurants ADD COLUMN primary_platform text DEFAULT NULL;
+```
 
-- Sentiment question cannot be deleted when it's the only one of its type
-- `QuestionItem`: accepts `locked` prop — replaces delete button with a `Lock` icon
-- `QuestionList`: passes `locked={question.type === 'sentiment' && only one sentiment exists}`
-- `FormBuilderClient`: safety net in `handleQuestionDelete` — blocks deletion with toast error
-- `QuestionEditor`: when `locked`, the "Obbligatoria" (required) switch is forced on and disabled
-- The question remains editable (label, description) and draggable
+#### 3. Navigation Targets Updated
+**Files:** `src/components/feedback/QuestionPageClient.tsx`, `src/app/r/[restaurantSlug]/[formId]/[index]/page.tsx`
 
-#### 4. Turnstile Verification UX
-**Files:** `src/components/feedback/NavigationButtons.tsx`, `src/components/feedback/QuestionPageClient.tsx`
+- Last question now navigates to `/review` instead of `/reward`
+- Overflow redirect (index > question count) also goes to `/review`
 
-- Removed "Verifica in corso..." text from the submit button — button now shows normal "Completa" state
-- Added standalone verification status message below buttons with AnimatePresence:
-  - **Verifying:** spinner + "Controllando che tu sia umano..." (button disabled)
-  - **Verified:** green `ShieldCheck` icon + "Verifica completata" (button enabled)
-- New `isVerified` prop passed from QuestionPageClient (`showTurnstile && !!turnstileToken`)
+#### 4. Reduced Confetti + Removed Review Buttons from Reward
+**Files:** `src/components/feedback/RewardClient.tsx`
 
-#### 5. Top Navigation Progress Bar
-**Files:** NEW `src/components/shared/ProgressBarProvider.tsx`, `src/app/layout.tsx`, `package.json`
+- Replaced continuous `requestAnimationFrame` loop (~1080 particles) with 3 timed bursts at 0ms, 300ms, 600ms (~180 total particles)
+- Removed review platform buttons entirely (now handled by review prompt screen)
+- Removed unused `sentiment` state, `Sentiment` type import, `ExternalLink` import, `reviewLinks` computation
+- Social follow links section kept as-is
 
-- Installed `nextjs-toploader` (replaces attempted `next-nprogress-bar` which doesn't work with App Router)
-- Created `ProgressBarProvider` client component: 3px dark bar, no spinner, no shadow
-- Added to root layout before `{children}`
-- Automatically intercepts all App Router navigations (Link clicks, router.push, redirects)
+#### 5. QR Code Card Mobile Fix
+**Files:** `src/components/dashboard/QRCodeClient.tsx`
 
-### Session 5 (latest commit `7a84f3f`)
+- "QR Code per Tavolo" card header changed from `flex items-center justify-between` to `space-y-3` vertical stack
+- Title + description on top, buttons below — prevents overflow on mobile
 
-#### 6. Logo SVGs & Branding
-**Files:** NEW `public/logo-5stelle.svg`, NEW `public/logo-5stelle-extended.svg`, `src/app/(auth)/login/page.tsx`, `src/app/(auth)/signup/page.tsx`, `src/app/page.tsx`, `src/components/dashboard/Sidebar.tsx`
+#### 6. Stripe Live Configuration
+**Files:** `.env.local`
 
-- Added two logo SVGs: icon-only (`logo-5stelle.svg`) and extended with text (`logo-5stelle-extended.svg`)
-- **Login & signup pages:** added logo icon (48x48) above the auth card, layout changed to `flex-col`
-- **Landing page navbar:** replaced "5stelle" text with `logo-5stelle-extended.svg` (130x38)
-- **Landing page footer:** replaced "5stelle" text with logo icon (28x28)
-- **Dashboard sidebar:** added logo icon (28x28) next to restaurant name in desktop sidebar, mobile header (24x24), and mobile drawer (28x28)
-
-#### 7. Back Button Icon Change
-**Files:** `src/components/feedback/NavigationButtons.tsx`
-
-- Replaced `ArrowLeft` icon with `Undo2` for the "Indietro" (back) button in the feedback flow
-
-#### 8. Feedback Form Layout Tightening
-**Files:** `src/components/feedback/NavigationButtons.tsx`, `src/components/feedback/QuestionPageClient.tsx`
-
-- NavigationButtons: padding changed from `py-6` to `pt-2`, added `w-full`
-- QuestionPageClient: wrapped question area + Turnstile + nav buttons in a single `flex-col items-center justify-center` container so content and buttons stay vertically centered together instead of buttons being pinned to the bottom
+- Added `STRIPE_WEBHOOK_SECRET` (live signing secret)
+- Live keys (publishable, secret, price ID) were already configured
+- `STRIPE_PRICE_ID` currently set to €1.10/day test price; `STRIPE_PRICE_ID-actual` has real €39/month price
+- `NEXT_PUBLIC_APP_URL` stays as localhost for dev; production value set in Netlify env vars
 
 ---
 
 ## Architecture Decisions
 
-- **Global cursor-pointer via CSS** — handles all interactive elements at once, including future additions. No need to add `cursor-pointer` to individual components.
-- **Sentiment question lock uses count check** — `locked` is true only when there's exactly 1 sentiment question. If someone adds a second sentiment question, both become deletable (but you can never go below 1).
-- **`nextjs-toploader` over `next-nprogress-bar`** — the latter doesn't intercept App Router `<Link>` navigations. `nextjs-toploader` monkey-patches `history.pushState` to catch everything.
+- **Review prompt as separate route** (`/review`) rather than a modal or step within the question flow — keeps it clean, supports direct linking, and follows the existing pattern of one screen per route
+- **Sentiment gate via sessionStorage** — review page reads `feedback_sentiment` and redirects non-great sentiments immediately. Does NOT clear sessionStorage (reward page handles cleanup)
+- **Gold border animation** — solid amber-400 base border + conic-gradient reflex rotating on top + breathing boxShadow glow + scale pulse, all via Framer Motion
+- **Deployment on Netlify** (not Vercel) with domain `5stelle.app`
 
 ---
 
@@ -83,9 +73,8 @@
 
 | File | Purpose |
 |------|---------|
-| `src/components/shared/ProgressBarProvider.tsx` | Top progress bar for route navigation |
-| `public/logo-5stelle.svg` | 5stelle icon logo |
-| `public/logo-5stelle-extended.svg` | 5stelle extended logo with text |
+| `src/components/feedback/ReviewPromptClient.tsx` | Review prompt screen (client component) |
+| `src/app/r/[restaurantSlug]/[formId]/review/page.tsx` | Review prompt server route |
 
 ---
 
@@ -93,36 +82,23 @@
 
 | File | Change |
 |------|--------|
-| `src/app/globals.css` | Global cursor-pointer rule |
-| `src/app/layout.tsx` | Added ProgressBarProvider |
-| `src/app/page.tsx` | Logo in navbar and footer |
-| `src/app/(auth)/login/page.tsx` | Logo above auth card |
-| `src/app/(auth)/signup/page.tsx` | Logo above auth card |
-| `src/app/(dashboard)/dashboard/page.tsx` | Fetch tables, pass tableNames to FeedbackList |
-| `src/components/dashboard/FeedbackList.tsx` | Table name badges, card padding fix, pass tableNames to detail dialog |
-| `src/components/dashboard/FeedbackDetailDialog.tsx` | Table name badge in detail view |
-| `src/components/dashboard/Sidebar.tsx` | Logo in desktop sidebar, mobile header, and mobile drawer |
-| `src/components/feedback/NavigationButtons.tsx` | Undo2 icon, verification status UX, layout tightening |
-| `src/components/feedback/QuestionPageClient.tsx` | Pass isVerified prop, layout refactor for vertical centering |
-| `src/components/form-builder/FormBuilderClient.tsx` | Block last sentiment deletion, pass locked to editor |
-| `src/components/form-builder/QuestionEditor.tsx` | Lock required switch when locked |
-| `src/components/form-builder/QuestionItem.tsx` | Lock icon replacing delete button |
-| `src/components/form-builder/QuestionList.tsx` | Compute locked state per question |
-| `src/components/ui/dropdown-menu.tsx` | cursor-default → cursor-pointer (4 places) |
-| `package.json` | Added nextjs-toploader |
+| `src/types/database.types.ts` | Added `primary_platform` to restaurants Row/Insert/Update |
+| `src/components/dashboard/LinksClient.tsx` | Star toggle for primary platform, save/clear logic |
+| `src/components/feedback/QuestionPageClient.tsx` | Nav target `/reward` → `/review` |
+| `src/app/r/[restaurantSlug]/[formId]/[index]/page.tsx` | Overflow redirect `/reward` → `/review` |
+| `src/components/feedback/RewardClient.tsx` | Reduced confetti, removed review buttons |
+| `src/components/dashboard/QRCodeClient.tsx` | Card header stacked vertically for mobile |
+| `.env.local` | Added Stripe webhook secret |
 
 ---
 
 ## Pending Items / Next Session
 
 ### Priority Tasks
-- [ ] **Review prompt screen before completion** — Add a new screen after the last question (before confetti) with "Un'ultima cosa..." that encourages the user to leave a public review:
-  - Owner sets a **primary platform** in dashboard settings — shown prominently as main CTA button
-  - Other configured platforms shown below with text "Oppure lasciaci una recensione su:"
-  - User can skip — but the "Continua" / skip button only becomes available after a **10-second countdown timer**
-  - Clicking any review link opens it in a new tab, then auto-advances to the confetti screen
-  - This screen only shows when `overall_sentiment === 'great'` (existing routing logic)
-- [ ] **Reduce confetti effect** — current confetti is too intense, tone it down significantly
+- [ ] **Subscription enforcement** — block dashboard access (except billing) when subscription inactive
+- [ ] **Trial expired screen** — redirect expired trials to billing with upgrade prompt
+- [ ] **Test full Stripe flow on production** — deploy, subscribe with €1.10 test price, verify webhook fires and status updates
+- [ ] **Swap to real price** — change `STRIPE_PRICE_ID` to `STRIPE_PRICE_ID-actual` (€39/month) when ready
 
 ### Still Open
 - [ ] Favicon — add to `/public` or `src/app/`
@@ -133,6 +109,3 @@
 
 ### Skipped for MVP (unchanged)
 - Logo upload (Supabase Storage)
-- Upgrade prompt if trial expired
-- Middleware subscription status checks
-- Block dashboard if subscription inactive

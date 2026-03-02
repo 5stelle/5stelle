@@ -192,7 +192,7 @@ export function QuestionPageClient({
           if (completeError) throw completeError
         }
 
-        router.push(`/r/${restaurantSlug}/${formId}/reward${isPreview && previewToken ? `?preview=${encodeURIComponent(previewToken)}` : ''}`)
+        router.push(`/r/${restaurantSlug}/${formId}/review${isPreview && previewToken ? `?preview=${encodeURIComponent(previewToken)}` : ''}`)
       } else {
         router.push(`/r/${restaurantSlug}/${formId}/${questionIndex + 1}${navQuery}`)
       }

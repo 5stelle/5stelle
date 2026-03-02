@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 4ILHXAlOnVKep8W65GGeGbil4s4NUpQ1AF7yaWlIa9W3zXoOdkJNamb13eE9Hqo
+\restrict GT84XndsMgb1CMLQcV3wPVn3NLp5YfI4yUftUJgb4oJzdoZe4ko7V5IYineSrCJ
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.3
@@ -105,7 +105,8 @@ CREATE TABLE public.restaurants (
     subscription_status text DEFAULT 'trialing'::text,
     trial_ends_at timestamp with time zone DEFAULT (now() + '7 days'::interval),
     created_at timestamp with time zone DEFAULT now(),
-    social_links jsonb DEFAULT '{}'::jsonb
+    social_links jsonb DEFAULT '{}'::jsonb,
+    primary_platform text
 );
 
 
@@ -681,5 +682,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 4ILHXAlOnVKep8W65GGeGbil4s4NUpQ1AF7yaWlIa9W3zXoOdkJNamb13eE9Hqo
+\unrestrict GT84XndsMgb1CMLQcV3wPVn3NLp5YfI4yUftUJgb4oJzdoZe4ko7V5IYineSrCJ
 
