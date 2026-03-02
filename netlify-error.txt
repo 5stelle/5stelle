@@ -1,0 +1,198 @@
+6:13:15 PM: build-image version: 8c9b1115cf47daa4d19510cfee34034469213d7a (noble-new-builds)
+6:13:15 PM: buildbot version: a1d2c1b97bf2ad3b19b1aeae0ec8dc337e1fce81
+6:13:15 PM: Fetching cached dependencies
+6:13:15 PM: Failed to fetch cache, continuing with build
+6:13:15 PM: Starting to prepare the repo for build
+6:13:15 PM: No cached dependencies found. Cloning fresh repo
+6:13:15 PM: git clone --filter=blob:none https://github.com/5stelle/5stelle
+6:13:15 PM: Preparing Git Reference refs/heads/master
+6:13:16 PM: Custom publish path detected. Proceeding with the specified path: '.next'
+6:13:16 PM: Custom build command detected. Proceeding with the specified command: 'npm run build'
+6:13:16 PM: Installing dependencies
+6:13:17 PM: mise ~/.config/mise/config.toml tools: python@3.14.3
+6:13:17 PM: mise ~/.config/mise/config.toml tools: ruby@3.4.8
+6:13:17 PM: mise ~/.config/mise/config.toml tools: go@1.26.0
+6:13:17 PM: v22.22.0 is already installed.
+6:13:18 PM: Now using node v22.22.0 (npm v10.9.4)
+6:13:18 PM: Enabling Node.js Corepack
+6:13:18 PM: No npm workspaces detected
+6:13:18 PM: Installing npm packages using npm version 10.9.4
+6:13:32 PM: npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+6:13:32 PM: added 777 packages in 14s
+6:13:32 PM: npm packages installed
+6:13:32 PM: Successfully installed dependencies
+6:13:32 PM: Detected 1 framework(s)
+6:13:32 PM: "next" at version "16.1.6"
+6:13:33 PM: Starting build script
+6:13:33 PM: Section completed: initializing
+6:13:35 PM: ​
+6:13:35 PM: Netlify Build                                                 
+6:13:35 PM: ────────────────────────────────────────────────────────────────
+6:13:35 PM: ​
+6:13:35 PM: ❯ Version
+6:13:35 PM:   @netlify/build 35.8.4
+6:13:35 PM: ​
+6:13:35 PM: ❯ Flags
+6:13:35 PM:   accountId: 6987d916f858cb9fa07fa816
+6:13:35 PM:   baseRelDir: true
+6:13:35 PM:   buildId: 69a5c52acd877f0008d47483
+6:13:35 PM:   deployId: 69a5c52acd877f0008d47485
+6:13:35 PM: ​
+6:13:35 PM: ❯ Current directory
+6:13:35 PM:   /opt/build/repo
+6:13:35 PM: ​
+6:13:35 PM: ❯ Config file
+6:13:35 PM:   /opt/build/repo/netlify.toml
+6:13:35 PM: ​
+6:13:35 PM: ❯ Context
+6:13:35 PM:   production
+6:13:35 PM: ​
+6:13:35 PM: ❯ Using Next.js Runtime - v5.15.8
+6:13:37 PM: No Next.js cache to restore
+6:13:37 PM: ​
+6:13:37 PM: build.command from netlify.toml                               
+6:13:37 PM: ────────────────────────────────────────────────────────────────
+6:13:37 PM: ​
+6:13:37 PM: $ npm run build
+6:13:37 PM: > review-app@0.1.0 build
+6:13:37 PM: > next build
+6:13:38 PM: ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+6:13:38 PM: ▲ Next.js 16.1.6 (Turbopack)
+6:13:38 PM: ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+6:13:38 PM:   Creating an optimized production build ...
+6:13:51 PM: ✓ Compiled successfully in 13.0s
+6:13:51 PM:   Running TypeScript ...
+6:13:57 PM:   Collecting page data using 2 workers ...
+6:13:57 PM:   Generating static pages using 2 workers (0/21) ...
+6:13:58 PM:   Generating static pages using 2 workers (5/21)
+6:13:58 PM:   Generating static pages using 2 workers (10/21)
+6:13:58 PM:   Generating static pages using 2 workers (15/21)
+6:13:58 PM: ✓ Generating static pages using 2 workers (21/21) in 363.0ms
+6:13:58 PM:   Finalizing page optimization ...
+6:13:58 PM: Route (app)
+6:13:58 PM: ┌ ○ /
+6:13:58 PM: ├ ○ /_not-found
+6:13:58 PM: ├ ƒ /api/stripe/checkout
+6:13:58 PM: ├ ƒ /api/stripe/portal
+6:13:58 PM: ├ ƒ /api/verify-turnstile
+6:13:58 PM: ├ ƒ /api/webhooks/stripe
+6:13:58 PM: ├ ƒ /dashboard
+6:13:58 PM: ├ ƒ /dashboard/billing
+6:13:58 PM: ├ ƒ /dashboard/form-builder
+6:13:58 PM: ├ ƒ /dashboard/links
+6:13:58 PM: ├ ƒ /dashboard/qr-codes
+6:13:58 PM: ├ ƒ /dashboard/settings
+6:13:58 PM: ├ ○ /login
+6:13:58 PM: ├ ○ /onboarding
+6:13:58 PM: ├ ○ /privacy
+6:13:58 PM: ├ ƒ /r/[restaurantSlug]/[formId]
+6:13:58 PM: ├ ƒ /r/[restaurantSlug]/[formId]/[index]
+6:13:58 PM: ├ ƒ /r/[restaurantSlug]/[formId]/reward
+6:13:58 PM: ├ ○ /robots.txt
+6:13:58 PM: ├ ○ /signup
+6:13:58 PM: ├ ○ /sitemap.xml
+6:13:58 PM: └ ○ /terms
+6:13:58 PM: ƒ Proxy (Middleware)
+6:13:58 PM: ○  (Static)   prerendered as static content
+6:13:58 PM: ƒ  (Dynamic)  server-rendered on demand
+6:13:58 PM: ​
+6:13:58 PM: (build.command completed in 21.3s)
+6:13:58 PM: Next.js cache saved
+6:13:59 PM: ​
+6:13:59 PM: Functions bundling                                            
+6:13:59 PM: ────────────────────────────────────────────────────────────────
+6:13:59 PM: ​
+6:13:59 PM: Packaging Functions from .netlify/functions-internal directory:
+6:13:59 PM:  - ___netlify-server-handler/___netlify-server-handler.mjs
+6:13:59 PM: ​
+6:14:01 PM: ​
+6:14:01 PM: (Functions bundling completed in 2.3s)
+6:14:01 PM: ​
+6:14:01 PM: Edge Functions bundling                                       
+6:14:01 PM: ────────────────────────────────────────────────────────────────
+6:14:01 PM: ​
+6:14:01 PM: Packaging Edge Functions from .netlify/edge-functions directory:
+6:14:01 PM:  - ___netlify-edge-handler-middleware
+6:14:03 PM: Failed during stage 'building site': Build script returned non-zero exit code: 2 (https://ntl.fyi/exit-code-2)
+6:14:03 PM: ​
+6:14:03 PM: (Edge Functions bundling completed in 1.1s)
+6:14:03 PM: ​
+6:14:03 PM: Scanning for secrets in code and build output.                
+6:14:03 PM: ────────────────────────────────────────────────────────────────
+6:14:03 PM: ​
+6:14:03 PM: ​
+6:14:03 PM: ❯ Scanning complete. 1638 file(s) scanned. Secrets scanning found 1 instance(s) of secrets in build output or repo code.
+6:14:03 PM: ​
+6:14:03 PM: Secret env var "NEXT_PUBLIC_SUPABASE_ANON_KEY"'s value detected:
+  found value at line 23 in .netlify/.next/server/chunks/_226bfc31._.js
+6:14:03 PM:   found value at line 59 in .netlify/.next/server/chunks/ssr/_54085008._.js
+6:14:03 PM:   found value at line 59 in .netlify/.next/server/chunks/ssr/_c0a30ddf._.js
+6:14:03 PM:   found value at line 71 in .netlify/.next/server/edge/chunks/[root-of-the-server]__7f99153f._.js
+6:14:03 PM:   found value at line 23 in .netlify/.next/standalone/.next/server/chunks/_226bfc31._.js
+6:14:03 PM:   found value at line 59 in .netlify/.next/standalone/.next/server/chunks/ssr/_54085008._.js
+6:14:03 PM:   found value at line 59 in .netlify/.next/standalone/.next/server/chunks/ssr/_c0a30ddf._.js
+6:14:03 PM:   found value at line 71 in .netlify/.next/standalone/.next/server/edge/chunks/[root-of-the-server]__7f99153f._.js
+6:14:03 PM:   found value at line 59 in .netlify/.next/static/chunks/652890ee4bd9184b.js
+6:14:03 PM:   found value at line 127 in .netlify/edge-functions/___netlify-edge-handler-middleware/server/middleware.js
+6:14:03 PM:   found value at line 23 in .netlify/functions-internal/___netlify-server-handler/.next/server/chunks/_226bfc31._.js
+6:14:03 PM:   found value at line 59 in .netlify/functions-internal/___netlify-server-handler/.next/server/chunks/ssr/_54085008._.js
+6:14:03 PM:   found value at line 59 in .netlify/functions-internal/___netlify-server-handler/.next/server/chunks/ssr/_c0a30ddf._.js
+6:14:03 PM:   found value at line 71 in .netlify/functions-internal/___netlify-server-handler/.next/server/edge/chunks/[root-of-the-server]__7f99153f._.js
+6:14:03 PM:   found value at line 59 in .next/_next/static/chunks/652890ee4bd9184b.js
+6:14:03 PM: ​
+6:14:03 PM: To prevent exposing secrets, the build will fail until these secret values are not found in build output or repo files.
+6:14:03 PM: ​
+6:14:03 PM: If these are expected, use SECRETS_SCAN_OMIT_PATHS, SECRETS_SCAN_OMIT_KEYS, or SECRETS_SCAN_ENABLED to prevent detecting.
+6:14:03 PM: ​
+6:14:03 PM: For more information on secrets scanning, see the Netlify Docs: https://ntl.fyi/configure-secrets-scanning
+6:14:03 PM: ​
+6:14:03 PM: Secrets scanning detected secrets in files during build.      
+6:14:03 PM: ────────────────────────────────────────────────────────────────
+6:14:03 PM: ​
+6:14:03 PM:   Error message
+6:14:03 PM:   Secrets scanning found secrets in build.
+6:14:03 PM: ​
+6:14:03 PM:   Resolved config
+6:14:03 PM:   build:
+6:14:03 PM:     command: npm run build
+6:14:03 PM:     commandOrigin: config
+6:14:03 PM:     environment:
+6:14:03 PM:       - NEXT_PUBLIC_APP_URL
+6:14:03 PM:       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+6:14:03 PM:       - NEXT_PUBLIC_SUPABASE_ANON_KEY
+6:14:03 PM:       - NEXT_PUBLIC_SUPABASE_URL
+6:14:03 PM:       - NEXT_PUBLIC_TURNSTILE_SITE_KEY
+6:14:03 PM:       - STRIPE_PRICE_ID
+6:14:03 PM:       - STRIPE_SECRET_KEY
+6:14:03 PM:       - SUPABASE_SERVICE_ROLE_KEY
+6:14:03 PM:       - TURNSTILE_SECRET_KEY
+6:14:03 PM:     publish: /opt/build/repo/.next
+6:14:03 PM:     publishOrigin: config
+6:14:03 PM:   headers:
+6:14:03 PM:     - for: /_next/static/*
+      values:
+        Cache-Control: public, max-age=31536000, immutable
+  headersOrigin: inline
+  plugins:
+    - inputs: {}
+      origin: config
+      package: "@netlify/plugin-nextjs"
+  redirects:
+    - from: /_next/image
+      query:
+        q: :quality
+        url: :url
+        w: :width
+      status: 200
+      to: /.netlify/images?url=:url&w=:width&q=:quality
+    - from: /_ipx/*
+      query:
+        q: :quality
+        url: :url
+        w: :width
+      status: 200
+      to: /.netlify/images?url=:url&w=:width&q=:quality
+  redirectsOrigin: inline
+6:14:03 PM: Build failed due to a user error: Build script returned non-zero exit code: 2
+6:14:03 PM: Failing build: Failed to build site
+6:14:04 PM: Finished processing build request in 49.111s
