@@ -7,7 +7,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Download, Copy, Check, ExternalLink, Plus, Trash2, Loader2, UtensilsCrossed, Pencil } from 'lucide-react'
+import { Download, Copy, Check, ExternalLink, Plus, Loader2, UtensilsCrossed, Pencil } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import type { Table } from '@/types/database.types'
 import { createClient } from '@/lib/supabase/client'
@@ -109,19 +110,19 @@ function TableQRCard({
   table,
   url,
   onDownloadPDF,
-  onDelete,
+  onToggleActive,
   onRename,
   isGenerating,
-  isDeleting,
+  isToggling,
   autoFocus,
 }: {
   table: Table
   url: string
   onDownloadPDF: () => void
-  onDelete: () => void
+  onToggleActive: () => void
   onRename: (name: string) => void
   isGenerating: boolean
-  isDeleting: boolean
+  isToggling: boolean
   autoFocus?: boolean
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -165,34 +166,49 @@ function TableQRCard({
     setIsEditing(false)
   }
 
+  const isActive = table.is_active
+
   return (
-    <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
+    <Card className={`transition-all duration-200 ${isActive ? 'hover:-translate-y-1 hover:shadow-md' : 'opacity-60 grayscale'}`}>
       <CardContent className="flex flex-col items-center py-6">
-        {/* Editable name */}
-        <div className="flex items-center gap-2 mb-1">
-          {isEditing ? (
-            <Input
-              ref={nameInputRef}
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onBlur={handleSaveName}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveName()
-                if (e.key === 'Escape') {
-                  setEditName(table.name)
-                  setIsEditing(false)
-                }
-              }}
-              className="h-7 text-sm font-medium text-center w-40"
-            />
-          ) : (
-            <button
-              onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1.5 text-sm font-medium hover:text-primary transition-colors"
-            >
-              {table.name}
-              <Pencil className="h-3 w-3 text-muted-foreground" />
-            </button>
+        {/* Active toggle + name */}
+        <div className="flex items-center gap-2 mb-1 w-full max-w-xs">
+          <Switch
+            checked={isActive}
+            onCheckedChange={onToggleActive}
+            disabled={isToggling}
+            size="sm"
+          />
+          <div className="flex-1 flex items-center justify-center gap-1.5">
+            {isEditing ? (
+              <Input
+                ref={nameInputRef}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={handleSaveName}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveName()
+                  if (e.key === 'Escape') {
+                    setEditName(table.name)
+                    setIsEditing(false)
+                  }
+                }}
+                className="h-7 text-sm font-medium text-center w-40"
+              />
+            ) : (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="flex items-center gap-1.5 text-sm font-medium hover:text-primary transition-colors"
+              >
+                {table.name}
+                <Pencil className="h-3 w-3 text-muted-foreground" />
+              </button>
+            )}
+          </div>
+          {!isActive && (
+            <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              Disattivato
+            </span>
           )}
         </div>
         <p className="text-xs text-muted-foreground mb-3">{table.identifier}</p>
@@ -215,29 +231,18 @@ function TableQRCard({
             </a>
           </Button>
         </div>
-        <div className="flex gap-2 w-full max-w-xs mt-4">
-          <Button
-            className="flex-1"
-            onClick={onDownloadPDF}
-            disabled={isGenerating}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {isGenerating ? 'Generazione...' : 'Scarica PDF'}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="text-muted-foreground hover:text-destructive hover:border-destructive"
-            onClick={onDelete}
-            disabled={isDeleting}
-          >
-            {isDeleting ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4" />
-            )}
-          </Button>
-        </div>
+        {isActive && (
+          <div className="flex gap-2 w-full max-w-xs mt-4">
+            <Button
+              className="flex-1"
+              onClick={onDownloadPDF}
+              disabled={isGenerating}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {isGenerating ? 'Generazione...' : 'Scarica PDF'}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -253,7 +258,7 @@ export function QRCodeClient({
   const [tables, setTables] = useState<Table[]>(initialTables)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null)
 
   const generalUrl = baseUrl
@@ -293,18 +298,23 @@ export function QRCodeClient({
     }
   }
 
-  const handleDeleteTable = async (id: string) => {
-    setDeletingId(id)
+  const handleToggleTable = async (id: string, currentStatus: boolean) => {
+    setTogglingId(id)
     try {
-      const { error } = await supabase.from('tables').delete().eq('id', id)
+      const { error } = await supabase
+        .from('tables')
+        .update({ is_active: !currentStatus })
+        .eq('id', id)
       if (error) throw error
-      setTables((prev) => prev.filter((t) => t.id !== id))
-      toast.success('Tavolo eliminato')
+      setTables((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, is_active: !currentStatus } : t))
+      )
+      toast.success(!currentStatus ? 'Tavolo attivato' : 'Tavolo disattivato')
     } catch {
-      console.error('Failed to delete table')
-      toast.error("Errore nell'eliminare il tavolo")
+      console.error('Failed to toggle table')
+      toast.error('Errore nel modificare lo stato del tavolo')
     } finally {
-      setDeletingId(null)
+      setTogglingId(null)
     }
   }
 
@@ -396,7 +406,8 @@ export function QRCodeClient({
   )
 
   const handleDownloadAllPDF = useCallback(async () => {
-    if (tables.length === 0) return
+    const activeTables = tables.filter((t) => t.is_active)
+    if (activeTables.length === 0) return
 
     setIsGenerating(true)
     try {
@@ -405,7 +416,7 @@ export function QRCodeClient({
 
       const allItems = [
         { label: 'QR Code Generale', url: generalUrl },
-        ...tables.map((t) => ({
+        ...activeTables.map((t) => ({
           label: t.name,
           url: `${baseUrl}?t=${encodeTableId(t.identifier)}`,
         })),
@@ -515,29 +526,32 @@ export function QRCodeClient({
           {tables.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <AnimatePresence initial={false}>
-                {tables.map((table) => {
-                  const tableUrl = `${baseUrl}?t=${encodeTableId(table.identifier)}`
-                  return (
-                    <motion.div
-                      key={table.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
-                      transition={{ duration: 0.25, ease: 'easeOut' }}
-                    >
-                      <TableQRCard
-                        table={table}
-                        url={tableUrl}
-                        onDownloadPDF={() => handleDownloadSinglePDF(tableUrl, table.name)}
-                        onDelete={() => handleDeleteTable(table.id)}
-                        onRename={(name) => handleRenameTable(table.id, name)}
-                        isGenerating={isGenerating}
-                        isDeleting={deletingId === table.id}
-                        autoFocus={newlyAddedId === table.id}
-                      />
-                    </motion.div>
-                  )
-                })}
+                {[...tables]
+                  .sort((a, b) => Number(b.is_active) - Number(a.is_active))
+                  .map((table) => {
+                    const tableUrl = `${baseUrl}?t=${encodeTableId(table.identifier)}`
+                    return (
+                      <motion.div
+                        key={table.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                        layout
+                      >
+                        <TableQRCard
+                          table={table}
+                          url={tableUrl}
+                          onDownloadPDF={() => handleDownloadSinglePDF(tableUrl, table.name)}
+                          onToggleActive={() => handleToggleTable(table.id, table.is_active)}
+                          onRename={(name) => handleRenameTable(table.id, name)}
+                          isGenerating={isGenerating}
+                          isToggling={togglingId === table.id}
+                          autoFocus={newlyAddedId === table.id}
+                        />
+                      </motion.div>
+                    )
+                  })}
               </AnimatePresence>
             </div>
           ) : (

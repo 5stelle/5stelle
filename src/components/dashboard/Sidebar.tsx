@@ -99,7 +99,7 @@ export function Sidebar({ restaurantName }: SidebarProps) {
         >
           <Menu className="h-6 w-6" />
         </Button>
-        <Image src="/logo-5stelle.svg" alt="5stelle" width={24} height={24} className="shrink-0" />
+        <Image src="/logo-5stelle-single.svg" alt="5stelle" width={24} height={24} className="shrink-0" />
         <h1 className="font-bold text-lg truncate flex-1 text-center pr-10">{restaurantName}</h1>
       </div>
 
@@ -121,7 +121,7 @@ export function Sidebar({ restaurantName }: SidebarProps) {
         {/* Mobile sidebar header with close button */}
         <div className="p-6 border-b flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <Image src="/logo-5stelle.svg" alt="5stelle" width={28} height={28} className="shrink-0" />
+            <Image src="/logo-5stelle-single.svg" alt="5stelle" width={28} height={28} className="shrink-0" />
             <h1 className="font-bold text-xl truncate">{restaurantName}</h1>
           </div>
           <Button
@@ -141,7 +141,7 @@ export function Sidebar({ restaurantName }: SidebarProps) {
       <aside className="hidden lg:flex fixed top-0 left-0 bottom-0 w-64 bg-background border-r flex-col">
         <div className="p-6 border-b">
           <div className="flex items-center gap-3">
-            <Image src="/logo-5stelle.svg" alt="5stelle" width={28} height={28} className="shrink-0" />
+            <Image src="/logo-5stelle-single.svg" alt="5stelle" width={28} height={28} className="shrink-0" />
             <h1 className="font-bold text-xl truncate">{restaurantName}</h1>
           </div>
           <p className="text-sm text-muted-foreground mt-1">Dashboard</p>

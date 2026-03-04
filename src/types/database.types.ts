@@ -146,6 +146,7 @@ export type Database = {
           restaurant_id: string
           name: string
           identifier: string
+          is_active: boolean
           created_at: string
         }
         Insert: {
@@ -153,6 +154,7 @@ export type Database = {
           restaurant_id: string
           name: string
           identifier: string
+          is_active?: boolean
           created_at?: string
         }
         Update: {
@@ -160,6 +162,7 @@ export type Database = {
           restaurant_id?: string
           name?: string
           identifier?: string
+          is_active?: boolean
           created_at?: string
         }
       }

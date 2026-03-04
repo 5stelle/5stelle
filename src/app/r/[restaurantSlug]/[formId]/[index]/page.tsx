@@ -58,6 +58,29 @@ export default async function QuestionPage({ params, searchParams }: Props) {
     notFound()
   }
 
+  // Check if table is active
+  if (tableIdentifier) {
+    const { data: tableData } = await supabase
+      .from('tables')
+      .select('is_active')
+      .eq('restaurant_id', restaurant.id)
+      .eq('identifier', tableIdentifier)
+      .single()
+
+    if (tableData && !tableData.is_active) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background px-4">
+          <div className="text-center space-y-3">
+            <h1 className="text-xl font-semibold">Tavolo non attivo</h1>
+            <p className="text-muted-foreground text-sm">
+              Questo tavolo non è al momento attivo. Chiedi al personale per assistenza.
+            </p>
+          </div>
+        </div>
+      )
+    }
+  }
+
   // Fetch form
   const { data: formData } = await supabase
     .from('forms')

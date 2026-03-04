@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict GT84XndsMgb1CMLQcV3wPVn3NLp5YfI4yUftUJgb4oJzdoZe4ko7V5IYineSrCJ
+\restrict 8AkAW9f00e6ankMg7audJjeDQl03gcNQA3V3hIrNKlVHzhv5BzOtdpSdgddrct0
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.3
@@ -138,7 +138,8 @@ CREATE TABLE public.tables (
     restaurant_id uuid NOT NULL,
     name text NOT NULL,
     identifier text NOT NULL,
-    created_at timestamp with time zone DEFAULT now()
+    created_at timestamp with time zone DEFAULT now(),
+    is_active boolean DEFAULT true NOT NULL
 );
 
 
@@ -362,6 +363,13 @@ CREATE POLICY "Public can view questions for active forms" ON public.questions F
 --
 
 CREATE POLICY "Public can view restaurants by slug" ON public.restaurants FOR SELECT USING (true);
+
+
+--
+-- Name: tables Public can view table status; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Public can view table status" ON public.tables FOR SELECT USING (true);
 
 
 --
@@ -682,5 +690,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict GT84XndsMgb1CMLQcV3wPVn3NLp5YfI4yUftUJgb4oJzdoZe4ko7V5IYineSrCJ
+\unrestrict 8AkAW9f00e6ankMg7audJjeDQl03gcNQA3V3hIrNKlVHzhv5BzOtdpSdgddrct0
 

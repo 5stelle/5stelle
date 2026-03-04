@@ -1,8 +1,23 @@
-# Session Handoff — 2026-03-03 (Session 7)
+# Session Handoff — 2026-03-04 (Session 8)
 
 ## What Was Done
 
-### Session 7 (current)
+### Session 8 (current)
+
+#### 1. Table Active/Inactive Toggle (replaces delete)
+**Files:** `src/types/database.types.ts`, `src/components/dashboard/QRCodeClient.tsx`, `src/app/r/[restaurantSlug]/[formId]/[index]/page.tsx`
+**DB:** `ALTER TABLE tables ADD COLUMN is_active boolean NOT NULL DEFAULT true` + `Public can view table status` RLS policy
+
+- Removed table deletion entirely — prevents accidental loss of printed QR codes
+- Added `is_active` toggle (Switch component) on each table QR card
+- Inactive tables: grayed out (opacity + grayscale), "Disattivato" badge, PDF download hidden
+- Active tables sorted first in grid, with Framer Motion layout animation
+- "Scarica tutti" PDF only includes active tables
+- Public feedback page: scanning inactive table QR shows "Tavolo non attivo" message
+
+---
+
+### Session 7
 
 #### 1. Subscription Enforcement (Middleware)
 **Files:** `src/lib/supabase/middleware.ts`

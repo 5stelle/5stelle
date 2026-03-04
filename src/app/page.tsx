@@ -342,7 +342,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/" className="flex items-center">
-            <Image src="/logo-5stelle.svg" alt="5stelle" width={130} height={38} priority />
+            <span className="text-xl font-bold tracking-tight"><span className="text-amber-500">5</span> Stelle App</span>
           </Link>
           <div className="flex items-center gap-3">
             <Button variant="ghost" asChild>
@@ -1059,7 +1059,7 @@ export default function Home() {
       {/* ── Footer ── */}
       <footer className="border-t py-12">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-6 text-sm text-muted-foreground sm:flex-row sm:justify-between">
-          <Image src="/logo-5stelle.svg" alt="5stelle" width={28} height={28} />
+          <Image src="/logo-5stelle.svg" alt="5stelle" width={120} height={24} />
           <div className="flex gap-6">
             <Link
               href="/privacy"
