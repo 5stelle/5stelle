@@ -78,7 +78,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <Image src="/logo-5stelle.svg" alt="5stelle" width={48} height={48} className="mb-6" />
+      <Image src="/logo-5stelle.svg" alt="5stelle" width={160} height={32} className="mb-6" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Crea il tuo account</CardTitle>
@@ -110,7 +110,7 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="Crea una password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onFocus={() => setPasswordFocused(true)}

@@ -29,12 +29,11 @@ export default function ForgotPasswordPage() {
       })
 
       if (error) {
-        if (error.message.toLowerCase().includes('invalid')) {
-          setError('Indirizzo email non valido')
-        } else if (error.message.toLowerCase().includes('rate')) {
+        console.error('Password reset error:', error.message)
+        if (error.message.toLowerCase().includes('rate')) {
           setError('Troppi tentativi. Riprova tra qualche minuto.')
         } else {
-          setError(error.message)
+          setError('Impossibile inviare l\'email di recupero. Verifica l\'indirizzo e riprova.')
         }
         setIsLoading(false)
         return
@@ -50,7 +49,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <Image src="/logo-5stelle.svg" alt="5stelle" width={48} height={48} className="mb-6" />
+      <Image src="/logo-5stelle.svg" alt="5stelle" width={160} height={32} className="mb-6" />
       <Card className="w-full max-w-md">
         {emailSent ? (
           <>
