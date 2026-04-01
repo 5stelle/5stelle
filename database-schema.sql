@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Sgo3sx4nqpGw5jILNdpJfXJTXKlfHJNo662emDEV3UigrjSGfri0DapOEwBhgEy
+\restrict CgPWlv0DkRRSXw8xUCleWA4lbPLX4G9cm4Bdabuhp2ekfR65ReyRFhxN3LgnLXy
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.3
@@ -344,17 +344,24 @@ CREATE POLICY "Public can insert submissions" ON public.submissions FOR INSERT W
 
 
 --
+-- Name: answers Public can select own submission answers; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Public can select own submission answers" ON public.answers FOR SELECT USING (true);
+
+
+--
 -- Name: answers Public can update answers; Type: POLICY; Schema: public; Owner: postgres
 --
 
-CREATE POLICY "Public can update answers" ON public.answers FOR UPDATE USING (true);
+CREATE POLICY "Public can update answers" ON public.answers FOR UPDATE USING (true) WITH CHECK (true);
 
 
 --
 -- Name: submissions Public can update own submissions; Type: POLICY; Schema: public; Owner: postgres
 --
 
-CREATE POLICY "Public can update own submissions" ON public.submissions FOR UPDATE USING (true);
+CREATE POLICY "Public can update own submissions" ON public.submissions FOR UPDATE USING (true) WITH CHECK (true);
 
 
 --
@@ -705,5 +712,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Sgo3sx4nqpGw5jILNdpJfXJTXKlfHJNo662emDEV3UigrjSGfri0DapOEwBhgEy
+\unrestrict CgPWlv0DkRRSXw8xUCleWA4lbPLX4G9cm4Bdabuhp2ekfR65ReyRFhxN3LgnLXy
 
