@@ -101,6 +101,7 @@ export default async function QuestionPage({ params, searchParams }: Props) {
     .from('questions')
     .select('*')
     .eq('form_id', form.id)
+    .eq('is_active', true)
     .order('order_index', { ascending: true })
 
   const questions = (questionsData || []) as Question[]

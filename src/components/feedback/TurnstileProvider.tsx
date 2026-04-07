@@ -22,8 +22,9 @@ export function TurnstileProvider({ children }: { children: React.ReactNode }) {
       {siteKey && (
         <Turnstile
           siteKey={siteKey}
-          options={{ size: 'invisible' }}
+          options={{ size: 'invisible', refreshExpired: 'auto' }}
           onSuccess={setToken}
+          onExpire={() => setToken(null)}
         />
       )}
       {children}

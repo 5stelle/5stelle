@@ -97,7 +97,7 @@ export function FormBuilderClient({
     try {
       const { error } = await supabase
         .from('questions')
-        .delete()
+        .update({ is_active: false })
         .eq('id', questionId)
 
       if (error) throw error
@@ -110,7 +110,24 @@ export function FormBuilderClient({
     }
   }
 
-  const handleAddQuestion = async (newQuestion: Omit<Question, 'id' | 'created_at'>) => {
+  const findReactivatable = async (label: string, type: string) => {
+    if (!currentForm) return null
+
+    const { data } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('form_id', currentForm.id)
+      .eq('type', type)
+      .eq('is_active', false)
+
+    if (!data) return null
+    const normalizedLabel = label.trim().toLowerCase()
+    return (data as Question[]).find(
+      (q) => q.label.trim().toLowerCase() === normalizedLabel
+    ) || null
+  }
+
+  const handleAddQuestion = async (newQuestion: Omit<Question, 'id' | 'created_at' | 'is_active'>) => {
     if (questions.length >= MAX_QUESTIONS_PER_FORM) {
       toast.error(`Massimo ${MAX_QUESTIONS_PER_FORM} domande per modulo`)
       return
@@ -123,19 +140,40 @@ export function FormBuilderClient({
 
     setIsSaving(true)
     try {
-      const { data, error } = await supabase
-        .from('questions')
-        .insert({
-          ...newQuestion,
-          form_id: currentForm.id,
-          order_index: questions.length,
-        })
-        .select()
-        .single()
+      const existing = await findReactivatable(newQuestion.label, newQuestion.type)
 
-      if (error) throw error
+      if (existing) {
+        const { data, error } = await supabase
+          .from('questions')
+          .update({
+            is_active: true,
+            label: newQuestion.label,
+            description: newQuestion.description,
+            is_required: newQuestion.is_required,
+            options: newQuestion.options,
+            order_index: questions.length,
+          })
+          .eq('id', existing.id)
+          .select()
+          .single()
 
-      setQuestions((prev) => [...prev, data as Question])
+        if (error) throw error
+        setQuestions((prev) => [...prev, data as Question])
+      } else {
+        const { data, error } = await supabase
+          .from('questions')
+          .insert({
+            ...newQuestion,
+            form_id: currentForm.id,
+            order_index: questions.length,
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+        setQuestions((prev) => [...prev, data as Question])
+      }
+
       toast.success('Domanda aggiunta')
     } catch {
       console.error('Failed to add question')
@@ -145,32 +183,59 @@ export function FormBuilderClient({
     }
   }
 
-  const handleTemplateApply = async (templateQuestions: Omit<Question, 'id' | 'form_id' | 'created_at'>[]) => {
+  const handleTemplateApply = async (templateQuestions: Omit<Question, 'id' | 'form_id' | 'created_at' | 'is_active'>[]) => {
     if (!currentForm) return
 
     setIsSaving(true)
     try {
-      // Delete existing questions
+      // Soft-delete all current active questions
       await supabase
         .from('questions')
-        .delete()
+        .update({ is_active: false })
         .eq('form_id', currentForm.id)
+        .eq('is_active', true)
 
-      // Insert new questions
-      const { data, error } = await supabase
-        .from('questions')
-        .insert(
-          templateQuestions.map((q, index) => ({
-            ...q,
-            form_id: currentForm.id,
-            order_index: index,
-          }))
-        )
-        .select()
+      // For each template question, try to reactivate or create new
+      const newQuestions: Question[] = []
 
-      if (error) throw error
+      for (let i = 0; i < templateQuestions.length; i++) {
+        const tq = templateQuestions[i]
+        const existing = await findReactivatable(tq.label, tq.type)
 
-      setQuestions((data || []) as Question[])
+        if (existing) {
+          const { data, error } = await supabase
+            .from('questions')
+            .update({
+              is_active: true,
+              label: tq.label,
+              description: tq.description,
+              is_required: tq.is_required,
+              options: tq.options,
+              order_index: i,
+            })
+            .eq('id', existing.id)
+            .select()
+            .single()
+
+          if (error) throw error
+          newQuestions.push(data as Question)
+        } else {
+          const { data, error } = await supabase
+            .from('questions')
+            .insert({
+              ...tq,
+              form_id: currentForm.id,
+              order_index: i,
+            })
+            .select()
+            .single()
+
+          if (error) throw error
+          newQuestions.push(data as Question)
+        }
+      }
+
+      setQuestions(newQuestions)
       toast.success('Template applicato')
     } catch {
       console.error('Failed to apply template')

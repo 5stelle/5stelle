@@ -83,6 +83,7 @@ CREATE TABLE public.questions (
     is_required boolean DEFAULT true,
     options jsonb,
     order_index integer NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     CONSTRAINT questions_type_check CHECK ((type = ANY (ARRAY['sentiment'::text, 'star_rating'::text, 'open_text'::text, 'multiple_choice'::text, 'single_choice'::text])))
 );

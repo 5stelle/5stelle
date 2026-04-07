@@ -10,7 +10,7 @@ interface Option {
   label: string
 }
 
-export function MultipleChoiceField({ question, value, onChange, error }: FieldProps) {
+export function MultipleChoiceField({ question, value, onChange }: FieldProps) {
   const options = (question.options as unknown as Option[]) || []
   const selectedValues = (value as string[]) || []
 
@@ -48,9 +48,6 @@ export function MultipleChoiceField({ question, value, onChange, error }: FieldP
           )
         })}
       </div>
-      {error && (
-        <p className="text-center text-sm text-red-500">{error}</p>
-      )}
     </div>
   )
 }

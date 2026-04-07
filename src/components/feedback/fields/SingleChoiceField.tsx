@@ -9,7 +9,7 @@ interface Option {
   label: string
 }
 
-export function SingleChoiceField({ question, value, onChange, error }: FieldProps) {
+export function SingleChoiceField({ question, value, onChange }: FieldProps) {
   const options = (question.options as unknown as Option[]) || []
   const selectedValue = value as string
 
@@ -40,9 +40,6 @@ export function SingleChoiceField({ question, value, onChange, error }: FieldPro
           )
         })}
       </div>
-      {error && (
-        <p className="text-center text-sm text-red-500">{error}</p>
-      )}
     </div>
   )
 }

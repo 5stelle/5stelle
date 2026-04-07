@@ -29,7 +29,7 @@
 
 ### 1.5 Project Structure
 - [x] Create folder structure and TypeScript types
-- [ ] Apply tweakcn theme customization
+- [x] ~~Apply tweakcn theme customization~~ — not needed
 
 ---
 
@@ -40,7 +40,7 @@
 - [x] Signup page (`/signup`) — email/password with confirmation, auto-login, redirect to onboarding
 - [x] Auth middleware (protect dashboard routes)
 - [x] Password recovery flow — forgot-password page, auth callback, reset-password page
-- [ ] **Configure custom SMTP in Supabase** — required for password recovery emails to work (default provider only sends to org members)
+- [x] Configure custom SMTP in Supabase (Resend)
 
 ### 2.2 Restaurant Onboarding
 - [x] Onboarding page (`/onboarding`) — restaurant name + slug, auto-create restaurant + default form
@@ -233,6 +233,97 @@
 - [ ] **Update Supabase Auth URL config** — change Site URL from `localhost` to `https://5stelle.app` + add `https://5stelle.app/auth/callback**` to Redirect URLs
 - [ ] Final deployment
 - [ ] Monitor for errors
+
+---
+
+## Phase 9.5: Bug Fixes (from code review)
+
+### 9.5.1 Turnstile Token Expiry
+- [x] Add `refreshExpired: 'auto'` and `onExpire` handler to TurnstileProvider so token auto-refreshes before expiry
+
+### 9.5.2 Onboarding Slug Race Condition
+- [x] Remove redundant pre-INSERT SELECT check for slug uniqueness
+- [x] Add live debounced slug availability check with inline status indicator (spinner / green "Disponibile" / red "Già in uso")
+- [x] Disable submit button while slug is being checked or is taken
+- [x] Catch Postgres `23505` unique violation on INSERT as race condition safety net
+- [x] Reset slug auto-generation when restaurant name field is cleared
+
+### 9.5.4 Preview Mode — Reward Page Fix
+- [x] Reward page was missing preview mode support — clicking "Continua" on review page redirected to question 1 instead of reward
+- [x] Pass `isPreview` through reward page route → RewardClient, skip sessionStorage submission check in preview
+
+### 9.5.3 Preserve Answers on Question Deletion
+- [x] Add `is_active` column to `questions` table (soft-delete instead of hard-delete)
+- [x] Question delete → `is_active = false` instead of DELETE (preserves FK link to answers)
+- [x] Template apply → soft-delete old questions, reactivate matching ones (case-insensitive label + same type)
+- [x] Add question → reactivate soft-deleted match if found, otherwise create new
+- [x] Filter by `is_active = true` in form builder, feedback flow, dashboard question count
+- [x] FeedbackDetailDialog → flip mapping to answers→questions so historical answers always render
+- [ ] **DB migration required:** `ALTER TABLE public.questions ADD COLUMN is_active boolean DEFAULT true NOT NULL;`
+
+---
+
+## Phase 11: UX Improvements
+
+### 11.1 Preview Mode for Form Testing
+- [ ] Add preview route (`/r/[slug]/[formId]/preview/[index]`) so owners can test their form without creating real submissions
+- [ ] "Anteprima" button in form builder should link to preview route instead of live route
+- [ ] Preview submissions should NOT be saved to the database (skip all Supabase inserts)
+- [ ] Show a visual indicator (e.g. banner) that the owner is in preview mode
+
+### 11.2 Disable "Avanti" Until Answer Selected
+- [x] Disable "Avanti"/"Completa" button until user has provided an answer (except `open_text` which remains optional)
+  - `sentiment`: disabled until a sentiment is selected
+  - `star_rating`: disabled until a rating is selected
+  - `single_choice`: disabled until an option is selected
+  - `multiple_choice`: disabled until at least one option is selected
+  - `open_text`: always enabled (optional by nature)
+- [x] Add tooltip on hover over disabled button: "Completa la domanda per continuare"
+- [x] Remove red error message validation — replaced by disabled state
+
+### 11.3 Sentiment Question: 2 Options Instead of 3
+- [ ] Replace 3 sentiment options (Ottimo / OK / Pessimo) with 2 (e.g. "Ottimo!" / "Poteva andare meglio")
+- [ ] Update sentiment routing: "Ottimo" → review prompt → reward, "Poteva andare meglio" → reward directly
+- [ ] Update `Sentiment` enum/type if needed (`great` / `bad`, remove `ok`)
+- [ ] Update dashboard sentiment filters and icons to reflect 2 options
+- [ ] Update FeedbackList sentiment breakdown display
+- [ ] Consider: monitor conversion rate with first client to validate this change
+
+### 11.4 Guided Tutorial / Onboarding Tour
+- [ ] Implement a step-by-step onboarding tour for first-time dashboard users (standard web app pattern)
+- [ ] Use a lightweight tour library (e.g. `driver.js` or `react-joyride`) — keep it simple and standard
+- [ ] Tour steps should cover: dashboard overview, form builder basics, QR code generation, settings/social links setup
+- [ ] Add contextual tooltips on key dashboard elements for discoverability
+- [ ] Tour should trigger on first login after onboarding, with option to replay from settings
+- [ ] Mark tour as completed in database (e.g. `has_completed_tour` flag on restaurants table)
+
+### 11.5 Default Template for New Users
+- [x] Set "Quick & Simple" (2 questions) as default template for new users during onboarding — already implemented in onboarding page
+
+---
+
+## Phase 12: Google Reviews Tracking
+
+> **IMPORTANT:** Discuss schema and implementation approach before coding.
+
+### 12.1 Schema & API Setup
+- [ ] Design `review_snapshots` table (restaurant_id, fetched_at, rating, review_count, recent_reviews JSONB)
+- [ ] Set up Google Places API key (server-side only, IP-restricted)
+- [ ] Store Google Place ID per client in restaurants table (already have it via GooglePlaceIdFinder)
+
+### 12.2 Onboarding Snapshot
+- [ ] On new client onboarding (or when Place ID is first set), fetch Place Details (rating, userRatingCount, 5 most recent reviews)
+- [ ] Store as baseline snapshot row
+
+### 12.3 Daily Cron Job
+- [ ] Daily cron to fetch Place Details for all active clients
+- [ ] Store new snapshot row per client per day
+- [ ] Lightweight: one API call per client per day
+
+### 12.4 Dashboard Display
+- [ ] Show rating trend over time (chart)
+- [ ] Review count growth
+- [ ] "Before 5stelle / After 5stelle" comparison with start date marker
 
 ---
 

@@ -66,6 +66,7 @@ export default async function FeedbackLayout({ children, params }: Props) {
     .from('questions')
     .select('*')
     .eq('form_id', form.id)
+    .eq('is_active', true)
     .order('order_index', { ascending: true })
 
   const questions = (questionsData || []) as Question[]

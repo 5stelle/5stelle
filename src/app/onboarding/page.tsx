@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Check, X } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { FORM_TEMPLATES } from '@/types/forms.types'
 
@@ -32,6 +32,8 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const [slugStatus, setSlugStatus] = useState<'idle' | 'checking' | 'available' | 'taken'>('idle')
+  const slugCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Check if user is authenticated
   useEffect(() => {
@@ -61,16 +63,45 @@ export default function OnboardingPage() {
     checkAuth()
   }, [supabase, router])
 
+  const checkSlugAvailability = useCallback((slugToCheck: string) => {
+    if (slugCheckTimer.current) clearTimeout(slugCheckTimer.current)
+
+    if (!slugToCheck.trim()) {
+      setSlugStatus('idle')
+      return
+    }
+
+    setSlugStatus('checking')
+    slugCheckTimer.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from('restaurants')
+        .select('id')
+        .eq('slug', slugToCheck)
+        .single()
+
+      setSlugStatus(data ? 'taken' : 'available')
+    }, 400)
+  }, [supabase])
+
   // Auto-generate slug from restaurant name
   useEffect(() => {
     if (!slugManuallyEdited && restaurantName) {
-      setSlug(generateSlug(restaurantName))
+      const newSlug = generateSlug(restaurantName)
+      setSlug(newSlug)
+      checkSlugAvailability(newSlug)
     }
-  }, [restaurantName, slugManuallyEdited])
+    if (!restaurantName) {
+      setSlug('')
+      setSlugStatus('idle')
+      setSlugManuallyEdited(false)
+    }
+  }, [restaurantName, slugManuallyEdited, checkSlugAvailability])
 
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSlugManuallyEdited(true)
-    setSlug(generateSlug(e.target.value))
+    const newSlug = generateSlug(e.target.value)
+    setSlug(newSlug)
+    checkSlugAvailability(newSlug)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,19 +128,6 @@ export default function OnboardingPage() {
         return
       }
 
-      // Check if slug is already taken
-      const { data: existingRestaurant } = await supabase
-        .from('restaurants')
-        .select('id')
-        .eq('slug', slug)
-        .single()
-
-      if (existingRestaurant) {
-        setError('Questo URL è già in uso. Scegline un altro.')
-        setIsLoading(false)
-        return
-      }
-
       // Create restaurant
       const { data: restaurant, error: restaurantError } = await supabase
         .from('restaurants')
@@ -122,8 +140,13 @@ export default function OnboardingPage() {
         .single()
 
       if (restaurantError) {
-        console.error('Restaurant creation error')
-        setError('Errore nella creazione del ristorante. Riprova.')
+        if (restaurantError.code === '23505') {
+          setSlugStatus('taken')
+          setError('Questo URL è già in uso. Scegline un altro.')
+        } else {
+          console.error('Restaurant creation error')
+          setError('Errore nella creazione del ristorante. Riprova.')
+        }
         setIsLoading(false)
         return
       }
@@ -224,12 +247,34 @@ export default function OnboardingPage() {
                   disabled={isLoading}
                 />
               </div>
+              {slug.trim() && slugStatus !== 'idle' && (
+                <div className="flex items-center gap-1.5 text-xs mt-1">
+                  {slugStatus === 'checking' && (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                      <span className="text-muted-foreground">Controllo disponibilità...</span>
+                    </>
+                  )}
+                  {slugStatus === 'available' && (
+                    <>
+                      <Check className="h-3 w-3 text-green-600" />
+                      <span className="text-green-600">Disponibile</span>
+                    </>
+                  )}
+                  {slugStatus === 'taken' && (
+                    <>
+                      <X className="h-3 w-3 text-red-500" />
+                      <span className="text-red-500">Già in uso</span>
+                    </>
+                  )}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Questo sarà l&apos;indirizzo del QR code per i tuoi clienti
               </p>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || slugStatus === 'taken' || slugStatus === 'checking'}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

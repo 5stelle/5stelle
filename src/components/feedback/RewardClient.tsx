@@ -13,9 +13,10 @@ interface RewardClientProps {
   form: Form
   restaurantSlug: string
   formId: string
+  isPreview?: boolean
 }
 
-export function RewardClient({ restaurant, form, restaurantSlug, formId }: RewardClientProps) {
+export function RewardClient({ restaurant, form, restaurantSlug, formId, isPreview = false }: RewardClientProps) {
   const router = useRouter()
   const [authorized, setAuthorized] = useState(false)
   const hasChecked = useRef(false)
@@ -25,7 +26,7 @@ export function RewardClient({ restaurant, form, restaurantSlug, formId }: Rewar
     hasChecked.current = true
 
     const submissionId = sessionStorage.getItem('feedback_submission')
-    if (!submissionId) {
+    if (!submissionId && !isPreview) {
       router.replace(`/r/${restaurantSlug}/${formId}/1`)
       return
     }

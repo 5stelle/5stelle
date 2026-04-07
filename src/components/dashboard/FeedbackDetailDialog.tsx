@@ -160,11 +160,13 @@ export function FeedbackDetailDialog({
     fetchDetails()
   }, [submission, formId, supabase])
 
-  // Match answers with questions
-  const answersWithQuestions = questions.map((question) => {
-    const answer = answers.find((a) => a.question_id === question.id)
-    return { question, answer }
-  })
+  // Match answers with their questions (answers drive the list, so soft-deleted questions still render)
+  const answersWithQuestions = answers
+    .map((answer) => {
+      const question = questions.find((q) => q.id === answer.question_id)
+      return { question, answer }
+    })
+    .sort((a, b) => (a.question?.order_index ?? 0) - (b.question?.order_index ?? 0))
 
   return (
     <Dialog open={!!submission} onOpenChange={() => onClose()}>
@@ -204,20 +206,16 @@ export function FeedbackDetailDialog({
             <div className="space-y-4">
               {answersWithQuestions.map(({ question, answer }, i) => (
                 <motion.div
-                  key={question.id}
+                  key={answer.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, delay: i * 0.06, ease: 'easeOut' }}
                   className="space-y-1"
                 >
-                  <p className="font-medium text-sm">{question.label}</p>
-                  {answer ? (
-                    <AnswerDisplay answer={answer} question={question} />
-                  ) : (
-                    <span className="text-muted-foreground italic text-sm">
-                      Nessuna risposta
-                    </span>
-                  )}
+                  <p className="font-medium text-sm">
+                    {question?.label ?? 'Domanda rimossa'}
+                  </p>
+                  <AnswerDisplay answer={answer} question={question} />
                 </motion.div>
               ))}
             </div>

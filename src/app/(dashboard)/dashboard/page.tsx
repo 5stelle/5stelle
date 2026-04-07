@@ -105,6 +105,7 @@ export default async function DashboardPage() {
       .from('questions')
       .select('*', { count: 'exact', head: true })
       .eq('form_id', formData.id)
+      .eq('is_active', true)
     questionsCount = count ?? 0
   }
   const hasFormWithQuestions = !!formData && questionsCount > 0

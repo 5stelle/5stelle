@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 import { notFound } from 'next/navigation'
 import type { Restaurant, Form } from '@/types/database.types'
 import { RewardClient } from '@/components/feedback/RewardClient'
+import { verifyPreviewToken } from '@/lib/preview-token'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,10 +17,13 @@ interface Props {
     restaurantSlug: string
     formId: string
   }>
+  searchParams: Promise<{ preview?: string }>
 }
 
-export default async function RewardPage({ params }: Props) {
+export default async function RewardPage({ params, searchParams }: Props) {
   const { restaurantSlug, formId } = await params
+  const { preview } = await searchParams
+  const isPreview = !!preview && verifyPreviewToken(formId, preview)
   const supabase = await createClient()
 
   // Fetch restaurant
@@ -55,6 +59,7 @@ export default async function RewardPage({ params }: Props) {
       form={form}
       restaurantSlug={restaurantSlug}
       formId={formId}
+      isPreview={isPreview}
     />
   )
 }

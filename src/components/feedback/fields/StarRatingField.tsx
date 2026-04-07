@@ -5,7 +5,7 @@ import type { FieldProps } from '@/types/forms.types'
 import { cn } from '@/lib/utils'
 import { Star } from 'lucide-react'
 
-export function StarRatingField({ value, onChange, error }: FieldProps) {
+export function StarRatingField({ value, onChange }: FieldProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null)
   const currentValue = (value as number) || 0
   const displayValue = hoverValue ?? currentValue
@@ -41,9 +41,6 @@ export function StarRatingField({ value, onChange, error }: FieldProps) {
         {currentValue === 4 && 'Buono'}
         {currentValue === 5 && 'Eccellente'}
       </div>
-      {error && (
-        <p className="text-center text-sm text-red-500">{error}</p>
-      )}
     </div>
   )
 }

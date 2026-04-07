@@ -21,40 +21,11 @@
 
 ---
 
-## Critical Rules
+## RLS Policies
 
-### 1. Follow TODO.md
-- **Read `TODO.md` at the start of every session** — it defines what to work on
-- Mark tasks complete (`[x]`) after implementation
-- Don't work on things not in TODO.md without asking
-
-### 2. Understand Before You Change
-- Read all related code before modifying anything
-- Search the codebase (`grep`) for all usages of a field/component before editing
-- Ask yourself: "Will this change break something that currently works?"
-- If unsure about something, verify in the code or ask — never assume
-
-### 3. Code Quality
-- Fix root causes, not symptoms. No workarounds, no hacky solutions
-- Change only what needs to change — surgical precision
-- No `any` types unless absolutely necessary (with a comment explaining why)
-- After any code change, run `npx tsc --noEmit` to catch type errors before considering the task done
-
-### 4. Error Handling
-- Every Supabase query: always check `{ data, error }`, show user-facing feedback on failure
-- Every async operation needs a loading state
-- When a save/submit fails, preserve the user's form data — never lose input
-- Never let a failure result in a blank screen or silent data loss
-
-### 5. RLS Policies
 - New table → enable RLS + create policies
 - `restaurants`, `forms`, `questions`: owner access only (via `owner_id`)
 - `submissions`, `answers`: owner can read, public can insert (no auth required for customers)
-
-### 6. UI Consistency
-- Reuse existing components from `@/components/ui` — never create custom replacements
-- Server Components by default — Client Components only when interactivity is needed
-- No unsolicited UI/design changes. Ask first
 
 ---
 
@@ -96,27 +67,8 @@ src/
 
 ---
 
-## Workflow Rules
+## File Conventions
 
-### Git
-- **Never run git commands** — only provide commit messages when asked
-- Format: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:` — concise but descriptive
-
-### Development
-- **Never run `npm run dev`** — user has a dev server running
-- Develop incrementally — small testable steps, let user verify between steps
-- Clean up test files after user confirms they work
-
-### File Conventions
 - Components: `PascalCase.tsx`
 - Utilities/hooks: `camelCase.ts`
 - Pages: `lowercase-hyphens/page.tsx`
-
----
-
-## Context Efficiency
-- Read files with purpose. Use grep to locate sections before reading large files
-- Never re-read a file already read in this session
-- For files over 500 lines, read only the relevant section
-- Don't echo back file contents or narrate tool calls
-- Keep explanations proportional to complexity

@@ -8,14 +8,12 @@ interface QuestionScreenProps {
   question: Question
   value: AnswerValue | undefined
   onChange: (value: AnswerValue) => void
-  error?: string | null
 }
 
 export function QuestionScreen({
   question,
   value,
   onChange,
-  error,
 }: QuestionScreenProps) {
   return (
     <div className="space-y-6">
@@ -24,16 +22,12 @@ export function QuestionScreen({
         {question.description && (
           <p className="text-muted-foreground">{question.description}</p>
         )}
-        {question.is_required && (
-          <span className="text-xs text-muted-foreground">* Obbligatoria</span>
-        )}
       </div>
 
       <FieldRenderer
         question={question}
         value={value}
         onChange={onChange}
-        error={error}
       />
     </div>
   )

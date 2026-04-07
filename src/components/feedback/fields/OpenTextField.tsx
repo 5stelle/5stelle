@@ -4,7 +4,7 @@ import type { FieldProps } from '@/types/forms.types'
 
 const MAX_LENGTH = 500
 
-export function OpenTextField({ value, onChange, error }: FieldProps) {
+export function OpenTextField({ value, onChange }: FieldProps) {
   const textValue = (value as string) || ''
   const charCount = textValue.length
 
@@ -19,7 +19,6 @@ export function OpenTextField({ value, onChange, error }: FieldProps) {
       />
       <div className="flex justify-between text-sm text-muted-foreground">
         <span>{charCount}/{MAX_LENGTH} caratteri</span>
-        {error && <span className="text-red-500">{error}</span>}
       </div>
     </div>
   )

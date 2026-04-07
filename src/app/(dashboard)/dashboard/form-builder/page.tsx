@@ -49,6 +49,7 @@ export default async function FormBuilderPage() {
       .from('questions')
       .select('*')
       .eq('form_id', form.id)
+      .eq('is_active', true)
       .order('order_index', { ascending: true })
 
     questions = (questionsData || []) as Question[]

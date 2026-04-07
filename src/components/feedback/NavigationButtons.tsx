@@ -2,12 +2,14 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Undo2, ArrowRight, Loader2, Check, ShieldCheck } from 'lucide-react'
 
 interface NavigationButtonsProps {
   isFirst: boolean
   isLast: boolean
   isSubmitting: boolean
+  isAnswered: boolean
   isVerifying?: boolean
   isVerified?: boolean
   onBack: () => void
@@ -18,12 +20,35 @@ export function NavigationButtons({
   isFirst,
   isLast,
   isSubmitting,
+  isAnswered,
   isVerifying = false,
   isVerified = false,
   onBack,
   onNext,
 }: NavigationButtonsProps) {
   const showVerificationStatus = isVerifying || isVerified
+  const isDisabled = isSubmitting || isVerifying || !isAnswered
+
+  const nextButton = (
+    <Button onClick={onNext} disabled={isDisabled} className="min-w-[120px]">
+      {isSubmitting ? (
+        <>
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          {isLast ? 'Invio...' : 'Salvo...'}
+        </>
+      ) : isLast ? (
+        <>
+          <Check className="h-4 w-4 mr-2" />
+          Completa
+        </>
+      ) : (
+        <>
+          Avanti
+          <ArrowRight className="h-4 w-4 ml-2" />
+        </>
+      )}
+    </Button>
+  )
 
   return (
     <div className="pt-2 space-y-3 w-full">
@@ -38,24 +63,20 @@ export function NavigationButtons({
           Indietro
         </Button>
 
-        <Button onClick={onNext} disabled={isSubmitting || isVerifying} className="min-w-[120px]">
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              {isLast ? 'Invio...' : 'Salvo...'}
-            </>
-          ) : isLast ? (
-            <>
-              <Check className="h-4 w-4 mr-2" />
-              Completa
-            </>
-          ) : (
-            <>
-              Avanti
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </>
-          )}
-        </Button>
+        {!isAnswered && !isSubmitting ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span tabIndex={0}>{nextButton}</span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Completa la domanda per continuare</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          nextButton
+        )}
       </div>
 
       <AnimatePresence>

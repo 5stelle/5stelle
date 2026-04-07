@@ -10,7 +10,7 @@ export interface FormTemplate {
   id: string
   name: string
   description: string
-  questions: Omit<Question, 'id' | 'form_id' | 'created_at'>[]
+  questions: Omit<Question, 'id' | 'form_id' | 'created_at' | 'is_active'>[]
 }
 
 // Customer feedback flow types
@@ -32,7 +32,6 @@ export interface FieldProps {
   question: Question
   value: AnswerValue | undefined
   onChange: (value: AnswerValue) => void
-  error?: string | null
 }
 
 // Question type metadata

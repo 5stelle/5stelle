@@ -48,7 +48,6 @@ export function QuestionPageClient({
 
   const [answer, setAnswer] = useState<AnswerValue | undefined>(undefined)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
 
   const { token: turnstileToken } = useTurnstile()
@@ -137,15 +136,14 @@ export function QuestionPageClient({
     return submissionId
   }
 
+  const isAnswered = (() => {
+    if (question.type === 'open_text') return true
+    if (answer === undefined || answer === '') return false
+    if (question.type === 'multiple_choice' && Array.isArray(answer) && answer.length === 0) return false
+    return true
+  })()
+
   const handleNext = async () => {
-    setError(null)
-
-    // Validate required
-    if (question.is_required && (answer === undefined || answer === '')) {
-      setError('Questa domanda è obbligatoria')
-      return
-    }
-
     setIsSubmitting(true)
     setDirection('forward')
 
@@ -184,7 +182,7 @@ export function QuestionPageClient({
       }
     } catch {
       console.error('Failed to save answer')
-      setError('Errore nel salvare la risposta. Riprova.')
+      toast.error('Errore nel salvare la risposta. Riprova.')
     } finally {
       setIsSubmitting(false)
     }
@@ -232,7 +230,6 @@ export function QuestionPageClient({
                 question={question}
                 value={answer}
                 onChange={setAnswer}
-                error={error}
               />
             </motion.div>
           </AnimatePresence>
@@ -242,6 +239,7 @@ export function QuestionPageClient({
           isFirst={isFirst}
           isLast={isLast}
           isSubmitting={isSubmitting}
+          isAnswered={isAnswered}
           isVerifying={showTurnstile && !turnstileToken}
           isVerified={showTurnstile && !!turnstileToken}
           onBack={handleBack}

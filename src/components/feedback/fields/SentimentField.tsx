@@ -11,7 +11,7 @@ const sentiments: { value: Sentiment; label: string; icon: typeof Smile; color: 
   { value: 'great', label: 'Positiva', icon: Smile, color: 'text-green-500 border-green-200 bg-green-50 hover:bg-green-100' },
 ]
 
-export function SentimentField({ value, onChange, error }: FieldProps) {
+export function SentimentField({ value, onChange }: FieldProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-center gap-4">
@@ -36,9 +36,6 @@ export function SentimentField({ value, onChange, error }: FieldProps) {
           )
         })}
       </div>
-      {error && (
-        <p className="text-center text-sm text-red-500">{error}</p>
-      )}
     </div>
   )
 }

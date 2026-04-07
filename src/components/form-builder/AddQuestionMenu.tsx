@@ -25,8 +25,8 @@ import {
 import { QUESTION_TYPE_META, FORM_TEMPLATES } from '@/types/forms.types'
 
 interface AddQuestionMenuProps {
-  onAdd: (question: Omit<Question, 'id' | 'created_at'>) => Promise<void>
-  onApplyTemplate: (questions: Omit<Question, 'id' | 'form_id' | 'created_at'>[]) => Promise<void>
+  onAdd: (question: Omit<Question, 'id' | 'created_at' | 'is_active'>) => Promise<void>
+  onApplyTemplate: (questions: Omit<Question, 'id' | 'form_id' | 'created_at' | 'is_active'>[]) => Promise<void>
   disabled?: boolean
   formId: string
 }

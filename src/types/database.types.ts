@@ -89,6 +89,7 @@ export type Database = {
           is_required: boolean
           options: Json | null
           order_index: number
+          is_active: boolean
           created_at: string
         }
         Insert: {
@@ -100,6 +101,7 @@ export type Database = {
           is_required?: boolean
           options?: Json | null
           order_index: number
+          is_active?: boolean
           created_at?: string
         }
         Update: {
@@ -111,6 +113,7 @@ export type Database = {
           is_required?: boolean
           options?: Json | null
           order_index?: number
+          is_active?: boolean
           created_at?: string
         }
       }

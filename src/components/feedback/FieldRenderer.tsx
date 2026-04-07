@@ -12,16 +12,14 @@ interface FieldRendererProps {
   question: Question
   value: AnswerValue | undefined
   onChange: (value: AnswerValue) => void
-  error?: string | null
 }
 
 export function FieldRenderer({
   question,
   value,
   onChange,
-  error,
 }: FieldRendererProps) {
-  const props = { question, value, onChange, error }
+  const props = { question, value, onChange }
 
   switch (question.type) {
     case 'sentiment':
