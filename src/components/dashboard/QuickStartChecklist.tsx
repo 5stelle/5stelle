@@ -16,6 +16,7 @@ interface ChecklistItem {
 interface QuickStartChecklistProps {
   hasFormWithQuestions: boolean
   hasSocialLinks: boolean
+  hasGoogleConnected: boolean
 }
 
 const DISMISSED_KEY = 'quickstart_dismissed'
@@ -37,6 +38,7 @@ const itemVariants = {
 export function QuickStartChecklist({
   hasFormWithQuestions,
   hasSocialLinks,
+  hasGoogleConnected,
 }: QuickStartChecklistProps) {
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false
@@ -52,7 +54,8 @@ export function QuickStartChecklist({
 
   const items: ChecklistItem[] = [
     { label: 'Personalizza il modulo con le domande che contano', href: '/dashboard/form-builder', done: hasFormWithQuestions },
-    { label: 'Configura i link social collegando i tuoi canali', href: '/dashboard/settings', done: hasSocialLinks },
+    { label: 'Collega il profilo Google per monitorare le recensioni', href: '/dashboard/links', done: hasGoogleConnected },
+    { label: 'Configura i link social e le piattaforme di recensioni', href: '/dashboard/links', done: hasSocialLinks },
     { label: 'Condividi il QR code e ottieni il primo feedback', href: '/dashboard/qr-codes', done: false },
   ]
 

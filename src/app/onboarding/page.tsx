@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Loader2, Check, X } from 'lucide-react'
+import { Loader2, Check, X, ArrowLeft } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { FORM_TEMPLATES } from '@/types/forms.types'
+import { GooglePlaceSearch } from '@/components/onboarding/GooglePlaceSearch'
 
 function generateSlug(name: string): string {
   return name
@@ -26,6 +27,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  const [step, setStep] = useState<1 | 2>(1)
   const [restaurantName, setRestaurantName] = useState('')
   const [slug, setSlug] = useState('')
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false)
@@ -104,7 +106,7 @@ export default function OnboardingPage() {
     checkSlugAvailability(newSlug)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
 
@@ -118,7 +120,17 @@ export default function OnboardingPage() {
       return
     }
 
+    if (slugStatus === 'taken') {
+      setError('Questo URL è già in uso. Scegline un altro.')
+      return
+    }
+
+    setStep(2)
+  }
+
+  const createRestaurant = async (googlePlaceId: string | null) => {
     setIsLoading(true)
+    setError(null)
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -128,20 +140,28 @@ export default function OnboardingPage() {
         return
       }
 
+      // Build insert data
+      const insertData: Record<string, unknown> = {
+        owner_id: user.id,
+        name: restaurantName.trim(),
+        slug: slug,
+      }
+
+      if (googlePlaceId) {
+        insertData.social_links = { google: googlePlaceId }
+      }
+
       // Create restaurant
       const { data: restaurant, error: restaurantError } = await supabase
         .from('restaurants')
-        .insert({
-          owner_id: user.id,
-          name: restaurantName.trim(),
-          slug: slug,
-        })
+        .insert(insertData)
         .select()
         .single()
 
       if (restaurantError) {
         if (restaurantError.code === '23505') {
           setSlugStatus('taken')
+          setStep(1)
           setError('Questo URL è già in uso. Scegline un altro.')
         } else {
           console.error('Restaurant creation error')
@@ -183,6 +203,23 @@ export default function OnboardingPage() {
         await supabase.from('questions').insert(questions)
       }
 
+      // Create baseline snapshot if Google was connected
+      if (googlePlaceId) {
+        try {
+          await fetch('/api/google/baseline-snapshot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              restaurantId: restaurant.id,
+              placeId: googlePlaceId,
+            }),
+          })
+        } catch {
+          // Non-critical — snapshot can be retried from settings
+          console.error('Baseline snapshot failed')
+        }
+      }
+
       router.push('/dashboard')
       router.refresh()
     } catch {
@@ -204,88 +241,149 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Configura il tuo ristorante</CardTitle>
-          <CardDescription>
-            Inserisci le informazioni del tuo locale per iniziare
-          </CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
-            {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
-                {error}
-              </div>
-            )}
+        {/* Step indicator */}
+        <div className="px-6 pt-6">
+          <div className="flex items-center gap-2">
+            <div
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                step >= 1 ? 'bg-primary' : 'bg-gray-200'
+              }`}
+            />
+            <div
+              className={`h-1.5 flex-1 rounded-full transition-colors ${
+                step >= 2 ? 'bg-primary' : 'bg-gray-200'
+              }`}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Passaggio {step} di 2
+          </p>
+        </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="restaurantName">Nome del ristorante</Label>
-              <Input
-                id="restaurantName"
-                type="text"
-                placeholder="Es. Trattoria da Mario"
-                value={restaurantName}
-                onChange={(e) => setRestaurantName(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
+        {step === 1 && (
+          <>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Configura il tuo ristorante</CardTitle>
+              <CardDescription>
+                Inserisci le informazioni del tuo locale per iniziare
+              </CardDescription>
+            </CardHeader>
+            <form onSubmit={handleStep1Submit}>
+              <CardContent className="space-y-6">
+                {error && (
+                  <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+                    {error}
+                  </div>
+                )}
 
-            <div className="space-y-2">
-              <Label htmlFor="slug">URL del tuo modulo feedback</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                  /r/
-                </span>
-                <Input
-                  id="slug"
-                  type="text"
-                  placeholder="trattoria-da-mario"
-                  value={slug}
-                  onChange={handleSlugChange}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              {slug.trim() && slugStatus !== 'idle' && (
-                <div className="flex items-center gap-1.5 text-xs mt-1">
-                  {slugStatus === 'checking' && (
-                    <>
-                      <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-                      <span className="text-muted-foreground">Controllo disponibilità...</span>
-                    </>
+                <div className="space-y-2">
+                  <Label htmlFor="restaurantName">Nome del ristorante</Label>
+                  <Input
+                    id="restaurantName"
+                    type="text"
+                    placeholder="Es. Trattoria da Mario"
+                    value={restaurantName}
+                    onChange={(e) => setRestaurantName(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="slug">URL del tuo modulo feedback</Label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                      /r/
+                    </span>
+                    <Input
+                      id="slug"
+                      type="text"
+                      placeholder="trattoria-da-mario"
+                      value={slug}
+                      onChange={handleSlugChange}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  {slug.trim() && slugStatus !== 'idle' && (
+                    <div className="flex items-center gap-1.5 text-xs mt-1">
+                      {slugStatus === 'checking' && (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                          <span className="text-muted-foreground">Controllo disponibilità...</span>
+                        </>
+                      )}
+                      {slugStatus === 'available' && (
+                        <>
+                          <Check className="h-3 w-3 text-green-600" />
+                          <span className="text-green-600">Disponibile</span>
+                        </>
+                      )}
+                      {slugStatus === 'taken' && (
+                        <>
+                          <X className="h-3 w-3 text-red-500" />
+                          <span className="text-red-500">Già in uso</span>
+                        </>
+                      )}
+                    </div>
                   )}
-                  {slugStatus === 'available' && (
-                    <>
-                      <Check className="h-3 w-3 text-green-600" />
-                      <span className="text-green-600">Disponibile</span>
-                    </>
-                  )}
-                  {slugStatus === 'taken' && (
-                    <>
-                      <X className="h-3 w-3 text-red-500" />
-                      <span className="text-red-500">Già in uso</span>
-                    </>
-                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Questo sarà l&apos;indirizzo del QR code per i tuoi clienti
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoading || slugStatus === 'taken' || slugStatus === 'checking'}
+                >
+                  Continua
+                </Button>
+              </CardContent>
+            </form>
+          </>
+        )}
+
+        {step === 2 && (
+          <>
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">
+                Trova il tuo ristorante su Google
+              </CardTitle>
+              <CardDescription>
+                Collegando il tuo profilo Google, monitoriamo le tue recensioni
+                e ti mostriamo come migliorano nel tempo
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {error && (
+                <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+                  {error}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                Questo sarà l&apos;indirizzo del QR code per i tuoi clienti
-              </p>
-            </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading || slugStatus === 'taken' || slugStatus === 'checking'}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creazione in corso...
-                </>
-              ) : (
-                'Inizia'
-              )}
-            </Button>
-          </CardContent>
-        </form>
+              <GooglePlaceSearch
+                onComplete={(placeId) => createRestaurant(placeId)}
+                onSkip={() => createRestaurant(null)}
+                isSubmitting={isLoading}
+              />
+
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStep(1)
+                  setError(null)
+                }}
+                disabled={isLoading}
+                className="w-full text-muted-foreground"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Torna indietro
+              </Button>
+            </CardContent>
+          </>
+        )}
       </Card>
     </div>
   )

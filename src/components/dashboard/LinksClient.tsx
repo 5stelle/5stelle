@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Loader2, Share2, Plus, X, Check, Star } from 'lucide-react'
+import { Loader2, Share2, Plus, X, Check } from 'lucide-react'
 import {
   PLATFORMS,
   INITIAL_PLATFORM_KEYS,
@@ -27,9 +27,6 @@ export function LinksClient({ restaurant }: LinksClientProps) {
 
   const existingLinks = (restaurant.social_links || {}) as Record<string, string>
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>(existingLinks)
-  const [primaryPlatform, setPrimaryPlatform] = useState<string | null>(
-    restaurant.primary_platform || null
-  )
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -58,15 +55,10 @@ export function LinksClient({ restaurant }: LinksClientProps) {
         }
       }
 
-      // Clear primary_platform if its value was removed
-      const safePrimary = primaryPlatform && cleaned[primaryPlatform] ? primaryPlatform : null
-
       const { error } = await supabase
         .from('restaurants')
-        .update({ social_links: cleaned, primary_platform: safePrimary })
+        .update({ social_links: cleaned })
         .eq('id', restaurant.id)
-
-      if (safePrimary !== primaryPlatform) setPrimaryPlatform(safePrimary)
 
       if (error) throw error
       toast.success('Link salvati')
@@ -99,7 +91,6 @@ export function LinksClient({ restaurant }: LinksClientProps) {
 
   const removePlatform = (key: string) => {
     if (!canRemove(key)) return
-    if (primaryPlatform === key) setPrimaryPlatform(null)
     setVisiblePlatforms((prev) => {
       const next = new Set(prev)
       next.delete(key)
@@ -143,19 +134,6 @@ export function LinksClient({ restaurant }: LinksClientProps) {
           <Label htmlFor={`social-${key}`} className="flex items-center gap-2">
             <Icon className="h-4 w-4" />
             {platform.name}
-            {platform.category === 'review' && (
-              <button
-                type="button"
-                disabled={!socialLinks[key]}
-                className="disabled:opacity-30 disabled:cursor-not-allowed"
-                title={primaryPlatform === key ? 'Rimuovi come principale' : 'Imposta come principale'}
-                onClick={() => setPrimaryPlatform(primaryPlatform === key ? null : key)}
-              >
-                <Star
-                  className={`h-4 w-4 ${primaryPlatform === key ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`}
-                />
-              </button>
-            )}
           </Label>
           {removable && (
             <Button

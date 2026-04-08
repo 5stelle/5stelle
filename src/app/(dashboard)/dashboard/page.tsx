@@ -6,12 +6,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 import { redirect } from 'next/navigation'
-import type { Restaurant, Submission, Table } from '@/types/database.types'
+import type { Restaurant, Submission, Table, ReviewSnapshot } from '@/types/database.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FeedbackList } from '@/components/dashboard/FeedbackList'
 import { ScoreRing } from '@/components/dashboard/ScoreRing'
 import { QuickStartChecklist } from '@/components/dashboard/QuickStartChecklist'
-import { Activity, BarChart3, Frown, Heart, Meh, Smile } from 'lucide-react'
+import { GoogleReviewsCard } from '@/components/dashboard/GoogleReviewsCard'
+import { Activity, BarChart3, Smile, Meh, Frown } from 'lucide-react'
 
 function SentimentBar({ great, ok, bad, total }: { great: number; ok: number; bad: number; total: number }) {
   if (total === 0) return null
@@ -126,6 +127,36 @@ export default async function DashboardPage() {
     tableNames[t.identifier] = t.name
   }
 
+  // Google Reviews snapshots
+  const googlePlaceId = (restaurant.social_links as Record<string, string> | null)?.google || null
+  const isGoogleConnected = !!googlePlaceId
+
+  let baselineSnapshot: ReviewSnapshot | null = null
+  let latestSnapshot: ReviewSnapshot | null = null
+
+  if (isGoogleConnected) {
+    const [{ data: baselineData }, { data: latestData }] = await Promise.all([
+      supabase
+        .from('review_snapshots')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .eq('is_baseline', true)
+        .order('fetched_at', { ascending: true })
+        .limit(1)
+        .single(),
+      supabase
+        .from('review_snapshots')
+        .select('*')
+        .eq('restaurant_id', restaurant.id)
+        .order('fetched_at', { ascending: false })
+        .limit(1)
+        .single(),
+    ])
+
+    baselineSnapshot = baselineData as ReviewSnapshot | null
+    latestSnapshot = latestData as ReviewSnapshot | null
+  }
+
   let submissions: Submission[] = []
   let stats = { total: 0, great: 0, ok: 0, bad: 0 }
   let todayCount = 0
@@ -190,6 +221,7 @@ export default async function DashboardPage() {
         <QuickStartChecklist
           hasFormWithQuestions={hasFormWithQuestions}
           hasSocialLinks={hasSocialLinks}
+          hasGoogleConnected={isGoogleConnected}
         />
       )}
 
@@ -224,7 +256,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Stats summary */}
+        {/* Stats summary + sentiment counts */}
         <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -234,72 +266,70 @@ export default async function DashboardPage() {
               <BarChart3 className="h-4 w-4 text-muted-foreground/50" />
             </div>
           </CardHeader>
-          <CardContent className="pt-2 pb-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg bg-muted/50 p-3.5">
+          <CardContent className="pt-2 pb-6 space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground mb-1">Totali</p>
                 <span className="text-2xl font-bold">{stats.total}</span>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3.5">
+              <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground mb-1">Oggi</p>
                 <span className="text-2xl font-bold">{todayCount}</span>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3.5">
+              <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground mb-1">Ultimi 7 giorni</p>
                 <span className="text-2xl font-bold">{weekCount}</span>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3.5">
+              <div className="rounded-lg bg-muted/50 p-3">
                 <p className="text-xs text-muted-foreground mb-1">Ultimo</p>
                 <span className="text-lg font-semibold">
                   {lastFeedback ? formatRelativeDate(lastFeedback) : '—'}
                 </span>
               </div>
             </div>
+
+            {/* Sentiment counts */}
+            {stats.total > 0 && (
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div className="flex items-center gap-1.5">
+                  <Smile className="h-4 w-4 text-green-500" />
+                  <span className="text-sm font-semibold text-green-600">{stats.great}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Meh className="h-4 w-4 text-yellow-500" />
+                  <span className="text-sm font-semibold text-yellow-600">{stats.ok}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Frown className="h-4 w-4 text-red-500" />
+                  <span className="text-sm font-semibold text-red-600">{stats.bad}</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Sentiment breakdown */}
-        <Card className="transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Sentiment
-              </CardTitle>
-              <Heart className="h-4 w-4 text-muted-foreground/50" />
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col justify-center gap-4 pt-2 pb-6">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-green-100">
-                <Smile className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Ottimo</p>
-              </div>
-              <span className="text-2xl font-bold text-green-600">{stats.great}</span>
-            </div>
-            <div className="border-t" />
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-yellow-100">
-                <Meh className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Ok</p>
-              </div>
-              <span className="text-2xl font-bold text-yellow-600">{stats.ok}</span>
-            </div>
-            <div className="border-t" />
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-red-100">
-                <Frown className="h-5 w-5 text-red-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Negativo</p>
-              </div>
-              <span className="text-2xl font-bold text-red-600">{stats.bad}</span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Google Reviews */}
+        <GoogleReviewsCard
+          isConnected={isGoogleConnected}
+          baseline={
+            baselineSnapshot
+              ? {
+                  rating: baselineSnapshot.rating,
+                  reviewCount: baselineSnapshot.review_count,
+                  fetchedAt: baselineSnapshot.fetched_at,
+                }
+              : null
+          }
+          latest={
+            latestSnapshot
+              ? {
+                  rating: latestSnapshot.rating,
+                  reviewCount: latestSnapshot.review_count,
+                  fetchedAt: latestSnapshot.fetched_at,
+                }
+              : null
+          }
+        />
       </div>
 
       {/* Feedback List */}

@@ -259,7 +259,7 @@
 - [x] Add question → reactivate soft-deleted match if found, otherwise create new
 - [x] Filter by `is_active = true` in form builder, feedback flow, dashboard question count
 - [x] FeedbackDetailDialog → flip mapping to answers→questions so historical answers always render
-- [ ] **DB migration required:** `ALTER TABLE public.questions ADD COLUMN is_active boolean DEFAULT true NOT NULL;`
+- [x] **DB migration required:** `ALTER TABLE public.questions ADD COLUMN is_active boolean DEFAULT true NOT NULL;`
 
 ---
 
@@ -304,26 +304,101 @@
 
 ## Phase 12: Google Reviews Tracking
 
-> **IMPORTANT:** Discuss schema and implementation approach before coding.
+> **Design decisions (discussed 2026-04-08):**
+> - Google is THE primary review platform — always primary, not configurable. Other platforms (TripAdvisor, TheFork, etc.) remain as optional secondary links
+> - Remove `primary_platform` toggle from settings — Google is hardcoded as primary
+> - Google Place ID setup happens during onboarding (not later in settings) — user searches by restaurant name via Places Autocomplete, picks their restaurant, baseline snapshot captured immediately
+> - Skippable but strongly discouraged — clear copy explaining they'll lose before/after tracking
+> - Dashboard nudge banner if Google not connected
+> - Daily cron via Netlify Scheduled Function → calls `/api/cron/review-snapshots` API route
+> - All Places API calls server-side only, single API key
 
 ### 12.1 Schema & API Setup
-- [ ] Design `review_snapshots` table (restaurant_id, fetched_at, rating, review_count, recent_reviews JSONB)
-- [ ] Set up Google Places API key (server-side only, IP-restricted)
-- [ ] Store Google Place ID per client in restaurants table (already have it via GooglePlaceIdFinder)
+- [x] Create `review_snapshots` table: `id`, `restaurant_id` (FK), `fetched_at`, `rating` (numeric 2,1), `review_count` (int), `recent_reviews` (jsonb), `is_baseline` (bool). Index on `(restaurant_id, fetched_at DESC)`. RLS: owner SELECT only, writes via admin client
+- [x] Set up Google Places API key (`GOOGLE_PLACES_API_KEY` env var, server-side only) — done (no restrictions yet, on main Google account)
+- [x] Create server-side utility to call Places API (Autocomplete + Place Details) — `src/lib/google-places.ts`
+- [x] Create shared Supabase admin client — `src/lib/supabase/admin.ts`
+- [x] API routes: `/api/google/autocomplete`, `/api/google/place-details`, `/api/google/baseline-snapshot`
 
-### 12.2 Onboarding Snapshot
-- [ ] On new client onboarding (or when Place ID is first set), fetch Place Details (rating, userRatingCount, 5 most recent reviews)
-- [ ] Store as baseline snapshot row
+### 12.2 Onboarding: Google Place Setup
+- [x] Add new onboarding step after slug: "Trova il tuo ristorante su Google"
+- [x] Search input using Places Autocomplete API (filtered: restaurants + Italy), show dropdown suggestions
+- [x] On selection: show confirmation card (name, address, current rating + stars, photo if available)
+- [x] On confirm: save Place ID to `social_links.google`, fetch Place Details, store baseline snapshot (`is_baseline = true`)
+- [x] Skip option: "Non trovo il mio ristorante" / "Non sono ancora su Google" — clear messaging about losing before/after comparison
+- [x] After this step → redirect to dashboard
+- [x] Step indicator (1 of 2, 2 of 2) + back button
 
 ### 12.3 Daily Cron Job
-- [ ] Daily cron to fetch Place Details for all active clients
-- [ ] Store new snapshot row per client per day
-- [ ] Lightweight: one API call per client per day
+- [x] API route: `/api/cron/review-snapshots` — protected by `CRON_SECRET` header
+- [x] Logic: fetch all restaurants with `social_links->>'google'` set, call Place Details for each, insert snapshot rows
+- [x] Netlify Scheduled Function: thin trigger at 3:00 AM UTC daily — `netlify/functions/daily-review-snapshots.mts`
+- [ ] Add `CRON_SECRET` env var to Netlify — **user manual step**
 
-### 12.4 Dashboard Display
-- [ ] Show rating trend over time (chart)
-- [ ] Review count growth
-- [ ] "Before 5stelle / After 5stelle" comparison with start date marker
+### 12.4 Dashboard: Google Reviews Section
+- [x] Current Google rating (large display) + delta since baseline
+- [ ] Rating trend chart over time (baseline marked as "Inizio 5stelle") — deferred until enough data points exist
+- [x] Review count growth (now vs baseline)
+- [x] Baseline reference with tracking start date
+- [x] If Google not connected: nudge banner "Collega il tuo ristorante a Google per monitorare le tue recensioni"
+
+### 12.5 Settings: Google Section Update
+- [ ] Replace current Google Place ID input with the same search widget from onboarding — deferred (current manual input works)
+- [ ] Show current linked restaurant (name, address, rating) with option to change — deferred
+- [x] Remove `primary_platform` star toggle — Google is always primary
+
+### 12.6 Review Prompt Screen Update
+- [x] Google always shown as primary CTA (animated gold border)
+- [x] Other configured review platforms shown as secondary buttons below
+- [x] Remove primary_platform logic, hardcode Google
+
+### 12.7 Review Prompt Click/View Tracking + Attribution
+> **Designed 2026-04-08. Not yet implemented.**
+> Goal: Track how many customers see the review prompt, how many click the Google CTA, and cross-reference with new reviews from daily snapshots to estimate how many reviews 5stelle drove.
+
+- [ ] **DB migration:** Add 3 columns to `submissions` table:
+  ```sql
+  ALTER TABLE public.submissions
+    ADD COLUMN review_prompt_shown_at timestamptz,
+    ADD COLUMN review_link_clicked_at timestamptz,
+    ADD COLUMN review_platform_clicked text;
+  ```
+- [ ] Update `src/types/database.types.ts` — add 3 fields to submissions Row/Insert/Update
+- [ ] Update `src/components/feedback/ReviewPromptClient.tsx`:
+  - Import `createClient` from `@/lib/supabase/client`
+  - On mount (when sentiment = 'great' and prompt renders): update submission with `review_prompt_shown_at = now()`
+  - Change `handleLinkClick` to accept platform key, update submission with `review_link_clicked_at` + `review_platform_clicked`
+  - Read submission ID from sessionStorage (`feedback_submission`)
+- [ ] Update dashboard page (`src/app/(dashboard)/dashboard/page.tsx`):
+  - Query submissions for: count with `review_prompt_shown_at IS NOT NULL`, count with `review_link_clicked_at IS NOT NULL`
+  - Pass these counts to GoogleReviewsCard
+- [ ] Update `src/components/dashboard/GoogleReviewsCard.tsx`:
+  - Show "Invitati a recensire: X" (prompt views)
+  - Show "Hanno cliccato: Y" (Google clicks)
+  - Attribution estimate: `min(googleClicks, newReviews)` ≈ reviews from 5stelle
+  - Display: "~X recensioni su Y nuove grazie a 5stelle"
+
+### 12.8 Landing Page Copy Update (do later, after feature is built)
+- [ ] Rewrite hero/value prop to lead with Google Reviews improvement
+- [ ] Add section showing the before/after tracking feature
+- [ ] Social proof angle: "Migliora le tue recensioni su Google"
+
+---
+
+## Phase 13: Pre-Production Checklist
+
+### 13.1 Environment & Security
+- [ ] Add `GOOGLE_PLACES_API_KEY` and `CRON_SECRET` to Netlify env vars
+- [ ] Add API restrictions to Google Places API key (Places API New only) + application restrictions
+- [ ] Google Cloud project is on main account — consider moving to separate account later
+- [ ] Update Supabase Auth URL config — change Site URL from `localhost` to `https://5stelle.app` + add redirect URLs
+- [ ] Decide on email confirmation for signups (currently disabled — fine for B2B manual onboarding, risky if public signups)
+
+---
+
+## Known Issues
+
+- **Duplicate sentiment question** — User reported seeing duplicate sentiment question in feedback flow. Likely a data issue (duplicate question rows in DB), not a code bug. Check with: `SELECT id, label, type, order_index, is_active FROM questions WHERE form_id = '<FORM_ID>' ORDER BY order_index;`
 
 ---
 

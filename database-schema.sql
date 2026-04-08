@@ -1,11 +1,11 @@
---
+﻿--
 -- PostgreSQL database dump
 --
 
-\restrict F34VRVpFBEJTwgdzaMljQ5af1Y55S9XickFA22YVtbYcygd8T9mLWfAOVMJIBXe
+\restrict bi0uSFooxXEsHB56MCWdgPuJsAgusjggvqpw47BNM0n23bjYmGzQS4PrHsMND4O
 
 -- Dumped from database version 17.6
--- Dumped by pg_dump version 18.3
+-- Dumped by pg_dump version 18.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -83,8 +83,8 @@ CREATE TABLE public.questions (
     is_required boolean DEFAULT true,
     options jsonb,
     order_index integer NOT NULL,
-    is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
+    is_active boolean DEFAULT true NOT NULL,
     CONSTRAINT questions_type_check CHECK ((type = ANY (ARRAY['sentiment'::text, 'star_rating'::text, 'open_text'::text, 'multiple_choice'::text, 'single_choice'::text])))
 );
 
@@ -112,6 +112,23 @@ CREATE TABLE public.restaurants (
 
 
 ALTER TABLE public.restaurants OWNER TO postgres;
+
+--
+-- Name: review_snapshots; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.review_snapshots (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    restaurant_id uuid NOT NULL,
+    fetched_at timestamp with time zone DEFAULT now() NOT NULL,
+    rating numeric(2,1),
+    review_count integer,
+    recent_reviews jsonb,
+    is_baseline boolean DEFAULT false NOT NULL
+);
+
+
+ALTER TABLE public.review_snapshots OWNER TO postgres;
 
 --
 -- Name: submissions; Type: TABLE; Schema: public; Owner: postgres
@@ -195,6 +212,14 @@ ALTER TABLE ONLY public.restaurants
 
 
 --
+-- Name: review_snapshots review_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.review_snapshots
+    ADD CONSTRAINT review_snapshots_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: submissions submissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -261,6 +286,13 @@ CREATE INDEX idx_restaurants_slug ON public.restaurants USING btree (slug);
 
 
 --
+-- Name: idx_review_snapshots_restaurant_date; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_review_snapshots_restaurant_date ON public.review_snapshots USING btree (restaurant_id, fetched_at DESC);
+
+
+--
 -- Name: idx_submissions_created_at; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -315,6 +347,14 @@ ALTER TABLE ONLY public.restaurants
 
 
 --
+-- Name: review_snapshots review_snapshots_restaurant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.review_snapshots
+    ADD CONSTRAINT review_snapshots_restaurant_id_fkey FOREIGN KEY (restaurant_id) REFERENCES public.restaurants(id) ON DELETE CASCADE;
+
+
+--
 -- Name: submissions submissions_form_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -328,6 +368,15 @@ ALTER TABLE ONLY public.submissions
 
 ALTER TABLE ONLY public.tables
     ADD CONSTRAINT tables_restaurant_id_fkey FOREIGN KEY (restaurant_id) REFERENCES public.restaurants(id) ON DELETE CASCADE;
+
+
+--
+-- Name: review_snapshots Owner can read own snapshots; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Owner can read own snapshots" ON public.review_snapshots FOR SELECT USING ((restaurant_id IN ( SELECT restaurants.id
+   FROM public.restaurants
+  WHERE (restaurants.owner_id = auth.uid()))));
 
 
 --
@@ -349,6 +398,13 @@ CREATE POLICY "Public can insert submissions" ON public.submissions FOR INSERT W
 --
 
 CREATE POLICY "Public can select own submission answers" ON public.answers FOR SELECT USING (true);
+
+
+--
+-- Name: submissions Public can select submissions by id; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Public can select submissions by id" ON public.submissions FOR SELECT USING (true);
 
 
 --
@@ -574,6 +630,12 @@ ALTER TABLE public.questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.restaurants ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: review_snapshots; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.review_snapshots ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: submissions; Type: ROW SECURITY; Schema: public; Owner: postgres
 --
 
@@ -629,6 +691,15 @@ GRANT ALL ON TABLE public.questions TO service_role;
 GRANT ALL ON TABLE public.restaurants TO anon;
 GRANT ALL ON TABLE public.restaurants TO authenticated;
 GRANT ALL ON TABLE public.restaurants TO service_role;
+
+
+--
+-- Name: TABLE review_snapshots; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE public.review_snapshots TO anon;
+GRANT ALL ON TABLE public.review_snapshots TO authenticated;
+GRANT ALL ON TABLE public.review_snapshots TO service_role;
 
 
 --
@@ -713,5 +784,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict F34VRVpFBEJTwgdzaMljQ5af1Y55S9XickFA22YVtbYcygd8T9mLWfAOVMJIBXe
+\unrestrict bi0uSFooxXEsHB56MCWdgPuJsAgusjggvqpw47BNM0n23bjYmGzQS4PrHsMND4O
 

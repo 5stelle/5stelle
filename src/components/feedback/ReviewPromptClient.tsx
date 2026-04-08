@@ -84,12 +84,10 @@ export function ReviewPromptClient({
     }))
     .filter(({ url }) => isSafeUrl(url))
 
-  const primaryKey = restaurant.primary_platform
-  const primaryLink = primaryKey
-    ? allReviewLinks.find(({ platform }) => platform.key === primaryKey) || null
-    : null
+  // Google is always the primary review platform
+  const primaryLink = allReviewLinks.find(({ platform }) => platform.key === 'google') || null
   const secondaryLinks = primaryLink
-    ? allReviewLinks.filter(({ platform }) => platform.key !== primaryKey)
+    ? allReviewLinks.filter(({ platform }) => platform.key !== 'google')
     : allReviewLinks
 
   const handleContinue = () => {

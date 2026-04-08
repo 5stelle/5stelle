@@ -192,6 +192,35 @@ export type Database = {
           created_at?: string
         }
       }
+      review_snapshots: {
+        Row: {
+          id: string
+          restaurant_id: string
+          fetched_at: string
+          rating: number | null
+          review_count: number | null
+          recent_reviews: Json | null
+          is_baseline: boolean
+        }
+        Insert: {
+          id?: string
+          restaurant_id: string
+          fetched_at?: string
+          rating?: number | null
+          review_count?: number | null
+          recent_reviews?: Json | null
+          is_baseline?: boolean
+        }
+        Update: {
+          id?: string
+          restaurant_id?: string
+          fetched_at?: string
+          rating?: number | null
+          review_count?: number | null
+          recent_reviews?: Json | null
+          is_baseline?: boolean
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -246,3 +275,7 @@ export type AnswerUpdate = Database['public']['Tables']['answers']['Update']
 export type Table = Database['public']['Tables']['tables']['Row']
 export type TableInsert = Database['public']['Tables']['tables']['Insert']
 export type TableUpdate = Database['public']['Tables']['tables']['Update']
+
+export type ReviewSnapshot = Database['public']['Tables']['review_snapshots']['Row']
+export type ReviewSnapshotInsert = Database['public']['Tables']['review_snapshots']['Insert']
+export type ReviewSnapshotUpdate = Database['public']['Tables']['review_snapshots']['Update']
