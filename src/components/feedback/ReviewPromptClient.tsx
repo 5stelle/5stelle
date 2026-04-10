@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import type { Restaurant, Form } from '@/types/database.types'
 import { PLATFORMS } from '@/lib/constants/platforms'
 import { Button } from '@/components/ui/button'
 import { ExternalLink, ArrowRight } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 interface ReviewPromptClientProps {
   restaurant: Restaurant
@@ -36,6 +37,7 @@ export function ReviewPromptClient({
   const [sentiment, setSentiment] = useState<string | null>(null)
   const [countdown, setCountdown] = useState(10)
   const [linkClicked, setLinkClicked] = useState(false)
+  const clickTracked = useRef(false)
 
   const rewardUrl = `/r/${restaurantSlug}/${formId}/reward${isPreview && previewToken ? `?preview=${encodeURIComponent(previewToken)}` : ''}`
 
@@ -53,6 +55,17 @@ export function ReviewPromptClient({
 
     if (stored !== 'great') {
       router.replace(rewardUrl)
+      return
+    }
+
+    // Track that the review prompt was shown
+    if (submissionId && !isPreview) {
+      const supabase = createClient()
+      supabase
+        .from('submissions')
+        .update({ review_prompt_shown_at: new Date().toISOString() })
+        .eq('id', submissionId)
+        .then()
     }
   }, [router, rewardUrl, restaurantSlug, formId, isPreview])
 
@@ -94,8 +107,25 @@ export function ReviewPromptClient({
     router.push(rewardUrl)
   }
 
-  const handleLinkClick = () => {
+  const handleLinkClick = (platformKey: string) => {
     setLinkClicked(true)
+
+    // Track the first click only
+    if (clickTracked.current || isPreview) return
+    clickTracked.current = true
+
+    const submissionId = sessionStorage.getItem('feedback_submission')
+    if (!submissionId) return
+
+    const supabase = createClient()
+    supabase
+      .from('submissions')
+      .update({
+        review_link_clicked_at: new Date().toISOString(),
+        review_platform_clicked: platformKey,
+      })
+      .eq('id', submissionId)
+      .then()
   }
 
   return (
@@ -142,7 +172,7 @@ export function ReviewPromptClient({
                       href={primaryLink.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={handleLinkClick}
+                      onClick={() => handleLinkClick(primaryLink.platform.key)}
                       className={`${primaryLink.platform.buttonColor} text-white w-full rounded-[9px] p-5 flex items-center gap-4 transition-transform active:scale-[0.98] relative z-10`}
                     >
                       <div className={`flex items-center justify-center w-14 h-14 rounded-lg shrink-0 ${primaryLink.platform.key === 'google' ? 'bg-white' : 'bg-white/20'}`}>
@@ -178,7 +208,7 @@ export function ReviewPromptClient({
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={handleLinkClick}
+                    onClick={() => handleLinkClick(platform.key)}
                     className={`${platform.buttonColor} text-white w-full rounded-xl px-4 py-3 flex items-center gap-3 transition-transform active:scale-[0.98]`}
                   >
                     <Icon className="h-5 w-5 shrink-0" />

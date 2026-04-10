@@ -157,6 +157,28 @@ export default async function DashboardPage() {
     latestSnapshot = latestData as ReviewSnapshot | null
   }
 
+  // Review prompt tracking counts
+  let promptViews = 0
+  let googleClicks = 0
+
+  if (formData) {
+    const [{ count: viewsCount }, { count: clicksCount }] = await Promise.all([
+      supabase
+        .from('submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('form_id', formData.id)
+        .not('review_prompt_shown_at', 'is', null),
+      supabase
+        .from('submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('form_id', formData.id)
+        .eq('review_platform_clicked', 'google'),
+    ])
+
+    promptViews = viewsCount ?? 0
+    googleClicks = clicksCount ?? 0
+  }
+
   let submissions: Submission[] = []
   let stats = { total: 0, great: 0, ok: 0, bad: 0 }
   let todayCount = 0
@@ -329,6 +351,8 @@ export default async function DashboardPage() {
                 }
               : null
           }
+          promptViews={promptViews}
+          googleClicks={googleClicks}
         />
       </div>
 

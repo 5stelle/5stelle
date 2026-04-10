@@ -1,11 +1,11 @@
-﻿--
+--
 -- PostgreSQL database dump
 --
 
-\restrict bi0uSFooxXEsHB56MCWdgPuJsAgusjggvqpw47BNM0n23bjYmGzQS4PrHsMND4O
+\restrict THLyd4BtexdLdkZ8dDPZJIEVtfw8oDPvaicrsRBMwV1nveB66gsv4tsihp1bfwx
 
 -- Dumped from database version 17.6
--- Dumped by pg_dump version 18.1
+-- Dumped by pg_dump version 18.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -141,6 +141,9 @@ CREATE TABLE public.submissions (
     overall_sentiment text,
     completed_at timestamp with time zone,
     created_at timestamp with time zone DEFAULT now(),
+    review_prompt_shown_at timestamp with time zone,
+    review_link_clicked_at timestamp with time zone,
+    review_platform_clicked text,
     CONSTRAINT submissions_overall_sentiment_check CHECK ((overall_sentiment = ANY (ARRAY['bad'::text, 'ok'::text, 'great'::text])))
 );
 
@@ -784,5 +787,5 @@ ALTER DEFAULT PRIVILEGES FOR ROLE supabase_admin IN SCHEMA public GRANT ALL ON T
 -- PostgreSQL database dump complete
 --
 
-\unrestrict bi0uSFooxXEsHB56MCWdgPuJsAgusjggvqpw47BNM0n23bjYmGzQS4PrHsMND4O
+\unrestrict THLyd4BtexdLdkZ8dDPZJIEVtfw8oDPvaicrsRBMwV1nveB66gsv4tsihp1bfwx
 

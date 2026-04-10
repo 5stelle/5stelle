@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Check, X } from 'lucide-react'
@@ -40,10 +40,14 @@ export function QuickStartChecklist({
   hasSocialLinks,
   hasGoogleConnected,
 }: QuickStartChecklistProps) {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return localStorage.getItem(DISMISSED_KEY) === 'true'
-  })
+  const [dismissed, setDismissed] = useState(false)
+
+  // Read localStorage after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (localStorage.getItem(DISMISSED_KEY) === 'true') {
+      setDismissed(true)
+    }
+  }, [])
 
   if (dismissed) return null
 

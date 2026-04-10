@@ -124,6 +124,9 @@ export type Database = {
           table_identifier: string | null
           overall_sentiment: Sentiment | null
           completed_at: string | null
+          review_prompt_shown_at: string | null
+          review_link_clicked_at: string | null
+          review_platform_clicked: string | null
           created_at: string
         }
         Insert: {
@@ -132,6 +135,9 @@ export type Database = {
           table_identifier?: string | null
           overall_sentiment?: Sentiment | null
           completed_at?: string | null
+          review_prompt_shown_at?: string | null
+          review_link_clicked_at?: string | null
+          review_platform_clicked?: string | null
           created_at?: string
         }
         Update: {
@@ -140,6 +146,9 @@ export type Database = {
           table_identifier?: string | null
           overall_sentiment?: Sentiment | null
           completed_at?: string | null
+          review_prompt_shown_at?: string | null
+          review_link_clicked_at?: string | null
+          review_platform_clicked?: string | null
           created_at?: string
         }
       }

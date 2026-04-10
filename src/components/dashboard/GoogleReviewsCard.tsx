@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Star, TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react'
+import { Star, TrendingUp, TrendingDown, Minus, ArrowRight, MousePointerClick, Eye } from 'lucide-react'
 import Link from 'next/link'
 
 interface SnapshotData {
@@ -15,6 +15,8 @@ interface GoogleReviewsCardProps {
   isConnected: boolean
   baseline: SnapshotData | null
   latest: SnapshotData | null
+  promptViews: number
+  googleClicks: number
 }
 
 function formatDate(dateString: string): string {
@@ -29,6 +31,8 @@ export function GoogleReviewsCard({
   isConnected,
   baseline,
   latest,
+  promptViews,
+  googleClicks,
 }: GoogleReviewsCardProps) {
   // Not connected — nudge banner
   if (!isConnected) {
@@ -170,6 +174,31 @@ export function GoogleReviewsCard({
             )}
           </div>
         </div>
+
+        {/* Attribution tracking */}
+        {(promptViews > 0 || googleClicks > 0) && (
+          <div className="mt-4 pt-3 border-t space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <Eye className="h-3.5 w-3.5" />
+                Invitati a recensire
+              </span>
+              <span className="font-semibold">{promptViews}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                <MousePointerClick className="h-3.5 w-3.5" />
+                Hanno cliccato
+              </span>
+              <span className="font-semibold">{googleClicks}</span>
+            </div>
+            {reviewDelta != null && reviewDelta > 0 && googleClicks > 0 && (
+              <p className="text-xs text-green-600 font-medium pt-1">
+                ~{Math.min(googleClicks, reviewDelta)} recensioni su {reviewDelta} nuove grazie a 5stelle
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Baseline reference */}
         {baseline && (

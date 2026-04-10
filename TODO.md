@@ -353,30 +353,13 @@
 - [x] Remove primary_platform logic, hardcode Google
 
 ### 12.7 Review Prompt Click/View Tracking + Attribution
-> **Designed 2026-04-08. Not yet implemented.**
-> Goal: Track how many customers see the review prompt, how many click the Google CTA, and cross-reference with new reviews from daily snapshots to estimate how many reviews 5stelle drove.
+> Implemented 2026-04-10. Tracks how many customers see the review prompt, how many click the Google CTA, and cross-references with new reviews from daily snapshots to estimate reviews driven by 5stelle.
 
-- [ ] **DB migration:** Add 3 columns to `submissions` table:
-  ```sql
-  ALTER TABLE public.submissions
-    ADD COLUMN review_prompt_shown_at timestamptz,
-    ADD COLUMN review_link_clicked_at timestamptz,
-    ADD COLUMN review_platform_clicked text;
-  ```
-- [ ] Update `src/types/database.types.ts` — add 3 fields to submissions Row/Insert/Update
-- [ ] Update `src/components/feedback/ReviewPromptClient.tsx`:
-  - Import `createClient` from `@/lib/supabase/client`
-  - On mount (when sentiment = 'great' and prompt renders): update submission with `review_prompt_shown_at = now()`
-  - Change `handleLinkClick` to accept platform key, update submission with `review_link_clicked_at` + `review_platform_clicked`
-  - Read submission ID from sessionStorage (`feedback_submission`)
-- [ ] Update dashboard page (`src/app/(dashboard)/dashboard/page.tsx`):
-  - Query submissions for: count with `review_prompt_shown_at IS NOT NULL`, count with `review_link_clicked_at IS NOT NULL`
-  - Pass these counts to GoogleReviewsCard
-- [ ] Update `src/components/dashboard/GoogleReviewsCard.tsx`:
-  - Show "Invitati a recensire: X" (prompt views)
-  - Show "Hanno cliccato: Y" (Google clicks)
-  - Attribution estimate: `min(googleClicks, newReviews)` ≈ reviews from 5stelle
-  - Display: "~X recensioni su Y nuove grazie a 5stelle"
+- [x] **DB migration:** Add 3 columns to `submissions` table (migration already run)
+- [x] Update `src/types/database.types.ts` — add 3 fields to submissions Row/Insert/Update
+- [x] Update `src/components/feedback/ReviewPromptClient.tsx` — track view on mount, first click wins with platform key, skipped in preview
+- [x] Update dashboard page — query `review_prompt_shown_at IS NOT NULL` + `review_platform_clicked = 'google'`, pass to GoogleReviewsCard
+- [x] Update `src/components/dashboard/GoogleReviewsCard.tsx` — attribution section with prompt views, Google clicks, `min(googleClicks, newReviews)` estimate
 
 ### 12.8 Landing Page Copy Update (do later, after feature is built)
 - [ ] Rewrite hero/value prop to lead with Google Reviews improvement
