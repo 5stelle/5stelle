@@ -29,6 +29,7 @@ interface QuestionPageClientProps {
 const SUBMISSION_KEY = 'feedback_submission'
 const ANSWERS_KEY = 'feedback_answers'
 const SENTIMENT_KEY = 'feedback_sentiment'
+const STAR_RATINGS_KEY = 'feedback_star_ratings'
 
 export function QuestionPageClient({
   question,
@@ -80,6 +81,11 @@ export function QuestionPageClient({
       if (question.type === 'sentiment' && answer !== undefined) {
         sessionStorage.setItem(SENTIMENT_KEY, answer as string)
       }
+      if (question.type === 'star_rating' && answer !== undefined) {
+        const starRatings = JSON.parse(sessionStorage.getItem(STAR_RATINGS_KEY) || '{}')
+        starRatings[question.id] = answer
+        sessionStorage.setItem(STAR_RATINGS_KEY, JSON.stringify(starRatings))
+      }
       const savedAnswers = JSON.parse(sessionStorage.getItem(ANSWERS_KEY) || '{}')
       savedAnswers[question.id] = answer
       sessionStorage.setItem(ANSWERS_KEY, JSON.stringify(savedAnswers))
@@ -125,6 +131,13 @@ export function QuestionPageClient({
           .update({ overall_sentiment: answer as Sentiment })
           .eq('id', submissionId)
         if (error) throw error
+      }
+
+      // Track star ratings for review prompt routing
+      if (question.type === 'star_rating') {
+        const starRatings = JSON.parse(sessionStorage.getItem(STAR_RATINGS_KEY) || '{}')
+        starRatings[question.id] = answer
+        sessionStorage.setItem(STAR_RATINGS_KEY, JSON.stringify(starRatings))
       }
     }
 

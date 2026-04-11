@@ -19,6 +19,7 @@ interface ReviewPromptClientProps {
 }
 
 const SENTIMENT_KEY = 'feedback_sentiment'
+const STAR_RATINGS_KEY = 'feedback_star_ratings'
 
 const isSafeUrl = (url: string) =>
   url.startsWith('https://') || url.startsWith('http://')
@@ -53,7 +54,17 @@ export function ReviewPromptClient({
     setSentiment(stored)
     setMounted(true)
 
-    if (stored !== 'great') {
+    // Route to Google CTA if great, or if ok with high star ratings
+    const shouldShowReview = stored === 'great' || (stored === 'ok' && (() => {
+      const starData = sessionStorage.getItem(STAR_RATINGS_KEY)
+      if (!starData) return false
+      const ratings = Object.values(JSON.parse(starData)) as number[]
+      if (ratings.length === 0) return false
+      const avg = ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+      return avg >= 3.5
+    })())
+
+    if (!shouldShowReview) {
       router.replace(rewardUrl)
       return
     }
@@ -71,7 +82,7 @@ export function ReviewPromptClient({
 
   // Countdown timer
   useEffect(() => {
-    if (!mounted || sentiment !== 'great') return
+    if (!mounted || !sentiment) return
     if (countdown <= 0) return
 
     const timer = setTimeout(() => {
@@ -81,8 +92,8 @@ export function ReviewPromptClient({
     return () => clearTimeout(timer)
   }, [countdown, sentiment, mounted])
 
-  // Don't render anything until mounted + sentiment check
-  if (!mounted || sentiment !== 'great') return null
+  // Don't render anything until mounted + routing resolved
+  if (!mounted || !sentiment) return null
 
   const canContinue = linkClicked || countdown === 0
 

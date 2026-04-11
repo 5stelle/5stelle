@@ -231,21 +231,19 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold">Feedback</h1>
-        <p className="text-muted-foreground mt-1">
-          Visualizza e gestisci i feedback dei tuoi clienti
-        </p>
-      </div>
-
-      {/* Quick-start checklist for new users */}
-      {stats.total === 0 && (
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Feedback</h1>
+          <p className="text-muted-foreground mt-1">
+            Visualizza e gestisci i feedback dei tuoi clienti
+          </p>
+        </div>
         <QuickStartChecklist
           hasFormWithQuestions={hasFormWithQuestions}
           hasSocialLinks={hasSocialLinks}
           hasGoogleConnected={isGoogleConnected}
         />
-      )}
+      </div>
 
       {/* Stats */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-3">

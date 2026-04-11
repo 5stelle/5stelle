@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import type { Restaurant, Form, Question } from '@/types/database.types'
 import { TurnstileProvider } from '@/components/feedback/TurnstileProvider'
+import { PreviewBanner } from '@/components/feedback/PreviewBanner'
 
 interface Props {
   children: React.ReactNode
@@ -77,6 +78,8 @@ export default async function FeedbackLayout({ children, params }: Props) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <PreviewBanner />
+
       {/* Header with restaurant name */}
       <header className="py-4 px-6 border-b">
         <div className="max-w-lg mx-auto text-center">

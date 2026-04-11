@@ -266,10 +266,10 @@
 ## Phase 11: UX Improvements
 
 ### 11.1 Preview Mode for Form Testing
-- [ ] Add preview route (`/r/[slug]/[formId]/preview/[index]`) so owners can test their form without creating real submissions
-- [ ] "Anteprima" button in form builder should link to preview route instead of live route
-- [ ] Preview submissions should NOT be saved to the database (skip all Supabase inserts)
-- [ ] Show a visual indicator (e.g. banner) that the owner is in preview mode
+- [x] ~~Add preview route~~ — uses `?preview=<signed_token>` query param instead (simpler, no duplicate routes)
+- [x] "Anteprima" button in form builder links to form with signed preview token (1-hour expiry)
+- [x] Preview submissions NOT saved to database (all Supabase inserts skipped in QuestionPageClient)
+- [x] Amber banner "Modalità anteprima — i dati non vengono salvati" shown at top of all feedback pages via `PreviewBanner` in layout
 
 ### 11.2 Disable "Avanti" Until Answer Selected
 - [x] Disable "Avanti"/"Completa" button until user has provided an answer (except `open_text` which remains optional)
@@ -281,21 +281,17 @@
 - [x] Add tooltip on hover over disabled button: "Completa la domanda per continuare"
 - [x] Remove red error message validation — replaced by disabled state
 
-### 11.3 Sentiment Question: 2 Options Instead of 3
-- [ ] Replace 3 sentiment options (Ottimo / OK / Pessimo) with 2 (e.g. "Ottimo!" / "Poteva andare meglio")
-- [ ] Update sentiment routing: "Ottimo" → review prompt → reward, "Poteva andare meglio" → reward directly
-- [ ] Update `Sentiment` enum/type if needed (`great` / `bad`, remove `ok`)
-- [ ] Update dashboard sentiment filters and icons to reflect 2 options
-- [ ] Update FeedbackList sentiment breakdown display
-- [ ] Consider: monitor conversion rate with first client to validate this change
+### 11.3 Smart Routing for "OK" Sentiment
+> **Decision (2026-04-11):** Instead of removing the "OK" option, keep all 3 sentiments but route "OK" customers to Google when their star ratings suggest they'd leave a 4+ review. Goal: maximize Google reviews without risking 3-star-or-below ratings.
+
+- [x] Save star rating answers to sessionStorage during feedback flow (`feedback_star_ratings` key, keyed by question ID)
+- [x] Update review prompt routing: `great` → Google CTA; `ok` + avg star rating ≥ 3.5 → Google CTA; everything else → reward
+- [x] Handle edge cases: no star rating questions in form → `ok` skips Google (safe default); user goes back and changes rating → correctly updated via question ID key
 
 ### 11.4 Guided Tutorial / Onboarding Tour
-- [ ] Implement a step-by-step onboarding tour for first-time dashboard users (standard web app pattern)
-- [ ] Use a lightweight tour library (e.g. `driver.js` or `react-joyride`) — keep it simple and standard
-- [ ] Tour steps should cover: dashboard overview, form builder basics, QR code generation, settings/social links setup
-- [ ] Add contextual tooltips on key dashboard elements for discoverability
-- [ ] Tour should trigger on first login after onboarding, with option to replay from settings
-- [ ] Mark tour as completed in database (e.g. `has_completed_tour` flag on restaurants table)
+> **Decision (2026-04-11):** Skipped — the dashboard is simple enough (5 sidebar items) that a guided tour adds complexity without real value. The QuickStartChecklist already guides new users through setup steps. For B2B with manual onboarding, a walkthrough or video is more effective.
+
+- [x] Replaced with improved QuickStartChecklist: icon button (ListChecks) in top-right of dashboard header with remaining-steps badge, opens dialog with full checklist. Shows until all steps are complete, no dismiss/localStorage needed
 
 ### 11.5 Default Template for New Users
 - [x] Set "Quick & Simple" (2 questions) as default template for new users during onboarding — already implemented in onboarding page
